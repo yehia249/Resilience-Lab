@@ -15,20 +15,23 @@ export function useReplay(enabled: boolean) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const cycles = useRef<Record<string, number>>({});
+  const requestVersion = useRef(0);
   async function open(summary: RecordingSummary, play: boolean) {
+    const version = ++requestVersion.current;
     setLoading(true);
     setError('');
     try {
       const response = await fetch(base + summary.file);
       if (!response.ok) throw Error('Recording file unavailable');
       const data = Recording.parse(await response.json());
+      if (version !== requestVersion.current) return;
       setRecording(data);
       setPosition(0);
       setPlaying(play);
     } catch (e) {
-      setError((e as Error).message);
+      if (version === requestVersion.current) setError((e as Error).message);
     } finally {
-      setLoading(false);
+      if (version === requestVersion.current) setLoading(false);
     }
   }
   useEffect(() => {

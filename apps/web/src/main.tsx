@@ -17,6 +17,8 @@ import { useReplay } from './replay';
 const API = import.meta.env.VITE_API_URL ?? '';
 const BASE = import.meta.env.BASE_URL;
 const localOrigin = ['localhost', '127.0.0.1'].includes(location.hostname);
+const localLiveBackend =
+  localOrigin && (import.meta.env.VITE_LAB_MODE === 'live' || import.meta.env.DEV);
 function route() {
   return location.hash.startsWith('#/')
     ? location.hash.slice(1)
@@ -169,9 +171,10 @@ function Chart({ samples }: { samples: Sample[] }) {
 }
 function App() {
   const [mode, setMode] = useState<'live' | 'replay'>(
-    new URLSearchParams(location.search).get('mode') === 'replay'
+    new URLSearchParams(location.search).get('mode') === 'replay' ||
+      import.meta.env.VITE_LAB_MODE === 'replay'
       ? 'replay'
-      : localOrigin && (import.meta.env.VITE_LAB_MODE === 'live' || import.meta.env.DEV)
+      : localLiveBackend
         ? 'live'
         : 'replay',
   );
@@ -206,7 +209,7 @@ function App() {
       .catch(() => {});
   }, [mode, replay.index]);
   function switchMode(next: 'live' | 'replay') {
-    if (next === 'live' && !localOrigin) {
+    if (next === 'live' && !localLiveBackend) {
       window.open('http://localhost:8088/?mode=live', '_blank', 'noopener,noreferrer');
       return;
     }

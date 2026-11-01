@@ -17,7 +17,7 @@ bench:
 	pnpm exec tsx scripts/record.ts
 record: bench
 replay:
-	pnpm dev
+	VITE_LAB_MODE=replay pnpm dev
 k3d-up:
 	bash scripts/k3d-up.sh
 k3d-down:
