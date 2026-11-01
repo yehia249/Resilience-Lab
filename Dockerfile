@@ -33,7 +33,7 @@ ENV NODE_ENV=production
 ENTRYPOINT ["/usr/local/bin/node"]
 CMD ["--import","./otel.mjs","server.mjs"]
 
-FROM alpine:3.23.5 AS web
+FROM alpine:3.24.3 AS web
 RUN apk upgrade --no-cache && apk add --no-cache nginx
 COPY --from=build /app/apps/web/dist /usr/share/nginx/html
 COPY infra/nginx-main.conf /etc/nginx/nginx.conf
