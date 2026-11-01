@@ -49,7 +49,11 @@ export function useReplay(enabled: boolean) {
         const parsed = RecordingIndex.parse(data);
         if (!active) return;
         setIndex(parsed);
-        if (parsed.runs[0]) void open(parsed.runs[0], false);
+        const latest =
+          parsed.runs
+            .filter((r) => r.type === 'KILL_PAYMENT')
+            .sort((a, b) => b.capturedAt.localeCompare(a.capturedAt))[0] ?? parsed.runs.at(-1);
+        if (latest) void open(latest, false);
         else setError('Real recordings are still being captured. No sample data is generated.');
       })
       .catch((e) => {
@@ -71,7 +75,10 @@ export function useReplay(enabled: boolean) {
     return () => clearTimeout(timer);
   }, [enabled, playing, recording, position, speed]);
   async function selectFault(type: FaultType) {
-    const runs = index?.runs.filter((r) => r.type === type) ?? [];
+    const runs =
+      index?.runs
+        .filter((r) => r.type === type)
+        .sort((a, b) => b.capturedAt.localeCompare(a.capturedAt)) ?? [];
     if (!runs.length) {
       setError('This fault has no published real recording yet. Capture is still running.');
       return;

@@ -207,7 +207,7 @@ function summarize(values: number[]) {
 }
 async function publishMetadata() {
   index.generatedAt = new Date().toISOString();
-  index.expectedRuns = repeats * 4;
+  index.expectedRuns = Math.max(repeats * 4, index.runs.length);
   await atomic(publicRoot + '/recordings/index.json', index);
   await atomic('docs/benchmarks/recordings/index.json', index);
   const runs = index.runs.map((r) => ({

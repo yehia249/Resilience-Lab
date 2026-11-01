@@ -10,6 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       VITE_LAB_MODE: replay
+      REQUIRE_FULL_RECORDINGS: 'true'
       VITE_SITE_BASE: /Resilience-Lab/
     steps:
       - uses: actions/checkout@v4
