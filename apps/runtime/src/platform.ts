@@ -138,11 +138,7 @@ export async function call<T>(
           return trace.getTracer(service).startActiveSpan(`downstream.${target}`, async (span) => {
             try {
               const headers: Record<string, string> = { 'content-type': 'application/json' };
-              propagation.inject(context.active(), headers);
-              span.setAttribute(
-                'lab.traceparent_injected',
-                typeof headers.traceparent === 'string',
-              );
+              // Undici injects W3C context. Manual injection as well creates duplicate traceparent headers.
               if (options.key) headers['idempotency-key'] = options.key;
               const response = await fetch(url + path, {
                 method: options.method ?? 'GET',
