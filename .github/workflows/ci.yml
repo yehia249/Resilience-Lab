@@ -48,6 +48,15 @@ jobs:
             test-results/
             compose.log
           retention-days: 7
+  container-security:
+    needs: checks
+    runs-on: ubuntu-latest
+    strategy: {matrix: {target: [service, web]}}
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build --target ${{ matrix.target }} -t lab-scan:${{ matrix.target }} .
+      - uses: aquasecurity/trivy-action@0.33.1
+        with: {image-ref: 'lab-scan:${{ matrix.target }}', severity: 'CRITICAL,HIGH', exit-code: '1', ignore-unfixed: true}
   cluster:
     needs: integration
     runs-on: ubuntu-latest
@@ -69,7 +78,7 @@ jobs:
           curl -fsSL https://github.com/yannh/kubeconform/releases/download/v0.7.0/kubeconform-linux-amd64.tar.gz | tar xz kubeconform
           kubectl kustomize infra/k8s/overlays/prod | ./kubeconform -strict -summary
   images:
-    needs: [checks, integration, cluster]
+    needs: [checks, integration, cluster, container-security]
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     permissions: {contents: read, packages: write}
