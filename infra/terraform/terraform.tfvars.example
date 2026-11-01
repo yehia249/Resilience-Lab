@@ -1,0 +1,7 @@
+region              = "YOUR_HOME_REGION"
+tenancy_ocid        = "ocid1.tenancy..."
+availability_domain = "YOUR_AD_NAME"
+image_ocid          = "ocid1.image...Ubuntu-ARM-Always-Free-eligible"
+ssh_public_key      = "ssh-ed25519 YOUR_PUBLIC_KEY"
+ssh_source_cidr     = "YOUR_PUBLIC_IPV4/32"
+free_tier_reviewed  = false
