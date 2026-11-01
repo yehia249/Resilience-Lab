@@ -6,6 +6,8 @@ The first four captures recorded the local Docker image identifier available to 
 
 The same existing local k3d deployment was used throughout the campaign. Infrastructure image updates were tested in a separate CI cluster. Application service faults, observed restarts and shared-host contention are part of the recorded experiments.
 
+After thirty completed captures, a spike exceeded the recovery timeout. Its actual frames are retained under interrupted/. Health-probe budgets were then extended, including Prometheus startup: an observed WAL replay took about eighty seconds and total startup exceeded the previous ninety-second budget. Synthetic traffic was paused during rollout and restored before capture resumed. See capture-config-after-30.json. Earlier and later runs are a heterogeneous operational campaign, not a controlled A/B comparison. The service image was not replaced during this correction.
+
 One spike attempt was interrupted by concurrent Compose build/start contention; see interrupted-build-contention.json. It predates automatic failed-frame persistence and is excluded from completed-run statistics. A later fixture quota reset encountered a transient WSL transport timeout before injecting a fault. The recorder resumed completed files and retried the missing experiment. New interrupted attempts preserve collected frames separately.
 
 Success statistics describe completed recoveries only. They are not an experiment success-rate estimate. Sample p95 uses the nearest-rank estimator; with ten runs it is the largest observed recovery. One-second polling can miss a brief payment fault slot. For that case the accepted fault request and actual trace errors establish the experiment, without inserting synthetic snapshots.

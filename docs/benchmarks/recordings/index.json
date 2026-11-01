@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-01T17:14:58.795Z",
+  "generatedAt": "2026-11-01T17:54:12.346Z",
   "expectedRuns": 40,
   "runs": [
     {
@@ -362,6 +362,126 @@
       "baselineRps": 24.999999999999996,
       "maxRps": 26.3552056447728,
       "file": "recordings/add_catalog_latency-08.json"
+    },
+    {
+      "id": "spike_traffic-08",
+      "type": "SPIKE_TRAFFIC",
+      "environment": "k3d",
+      "capturedAt": "2026-11-01T17:34:53.076Z",
+      "recoverySeconds": 90.789,
+      "peakP95": 2131.4955752212463,
+      "peakErrorRate": 1.5211637816556702,
+      "baselineRps": 20.50900965234882,
+      "maxRps": 98.00403097692359,
+      "file": "recordings/spike_traffic-08.json"
+    },
+    {
+      "id": "slow_database-08",
+      "type": "SLOW_DATABASE",
+      "environment": "k3d",
+      "capturedAt": "2026-11-01T17:36:33.610Z",
+      "recoverySeconds": 156.566,
+      "peakP95": 4467.1086236435385,
+      "peakErrorRate": 9.438957710298816,
+      "baselineRps": 24.892857142857142,
+      "maxRps": 29.509341725779848,
+      "file": "recordings/slow_database-08.json"
+    },
+    {
+      "id": "kill_payment-09",
+      "type": "KILL_PAYMENT",
+      "environment": "k3d",
+      "capturedAt": "2026-11-01T17:45:17.659Z",
+      "recoverySeconds": 62.861,
+      "peakP95": 5000,
+      "peakErrorRate": 73.65736573657367,
+      "baselineRps": 24.666666666666664,
+      "maxRps": 28.249999999999996,
+      "file": "recordings/kill_payment-09.json"
+    },
+    {
+      "id": "add_catalog_latency-09",
+      "type": "ADD_CATALOG_LATENCY",
+      "environment": "k3d",
+      "capturedAt": "2026-11-01T17:46:30.845Z",
+      "recoverySeconds": 53.227,
+      "peakP95": 612.4631516342574,
+      "peakErrorRate": 0,
+      "baselineRps": 25.059523809523807,
+      "maxRps": 26.69973313318322,
+      "file": "recordings/add_catalog_latency-09.json"
+    },
+    {
+      "id": "spike_traffic-09",
+      "type": "SPIKE_TRAFFIC",
+      "environment": "k3d",
+      "capturedAt": "2026-11-01T17:47:32.553Z",
+      "recoverySeconds": 69.625,
+      "peakP95": 88.88707730438908,
+      "peakErrorRate": 0,
+      "baselineRps": 24.738095238095237,
+      "maxRps": 121.97619047619047,
+      "file": "recordings/spike_traffic-09.json"
+    },
+    {
+      "id": "slow_database-09",
+      "type": "SLOW_DATABASE",
+      "environment": "k3d",
+      "capturedAt": "2026-11-01T17:48:54.022Z",
+      "recoverySeconds": 53.167,
+      "peakP95": 1019.148936170212,
+      "peakErrorRate": 0,
+      "baselineRps": 24.928571428571427,
+      "maxRps": 26.273809523809522,
+      "file": "recordings/slow_database-09.json"
+    },
+    {
+      "id": "kill_payment-10",
+      "type": "KILL_PAYMENT",
+      "environment": "k3d",
+      "capturedAt": "2026-11-01T17:49:56.639Z",
+      "recoverySeconds": 44.436,
+      "peakP95": 3589.0390266995714,
+      "peakErrorRate": 1.9450549431117792,
+      "baselineRps": 24.726190476190474,
+      "maxRps": 30.052660317460315,
+      "file": "recordings/kill_payment-10.json"
+    },
+    {
+      "id": "add_catalog_latency-10",
+      "type": "ADD_CATALOG_LATENCY",
+      "environment": "k3d",
+      "capturedAt": "2026-11-01T17:50:51.412Z",
+      "recoverySeconds": 53.772,
+      "peakP95": 1078.3783783783788,
+      "peakErrorRate": 0,
+      "baselineRps": 25.107142857142854,
+      "maxRps": 26.249999999999996,
+      "file": "recordings/add_catalog_latency-10.json"
+    },
+    {
+      "id": "spike_traffic-10",
+      "type": "SPIKE_TRAFFIC",
+      "environment": "k3d",
+      "capturedAt": "2026-11-01T17:51:54.896Z",
+      "recoverySeconds": 69.299,
+      "peakP95": 82.83881014023711,
+      "peakErrorRate": 0,
+      "baselineRps": 24.833333333333332,
+      "maxRps": 122.68562345641215,
+      "file": "recordings/spike_traffic-10.json"
+    },
+    {
+      "id": "slow_database-10",
+      "type": "SLOW_DATABASE",
+      "environment": "k3d",
+      "capturedAt": "2026-11-01T17:53:14.620Z",
+      "recoverySeconds": 52.652,
+      "peakP95": 498.3406432748538,
+      "peakErrorRate": 0,
+      "baselineRps": 25.166666666666668,
+      "maxRps": 25.80952380952381,
+      "file": "recordings/slow_database-10.json"
     }
   ]
 }

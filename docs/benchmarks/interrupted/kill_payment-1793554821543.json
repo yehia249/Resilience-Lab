@@ -1,0 +1,3124 @@
+{
+  "status": "interrupted",
+  "type": "KILL_PAYMENT",
+  "observedAt": "2026-11-01T17:40:21.543Z",
+  "error": "KILL_PAYMENT: injection 503: {\"error\":\"The operation was aborted due to timeout\"}",
+  "frames": [
+    {
+      "ts": 1793554805664,
+      "metrics": {
+        "rps": 24.189894215085435,
+        "errorRatePct": 0.93506186583246,
+        "p50": 7.8585364035640985,
+        "p95": 78.52723852677069,
+        "p99": 1224.6247857563123
+      },
+      "services": [
+        {
+          "name": "gateway",
+          "ready": 5,
+          "desired": 5,
+          "cpuPct": 9.622897250000001,
+          "memoryBytes": 344526848,
+          "p95": 78.52723852677069,
+          "state": "healthy"
+        },
+        {
+          "name": "catalog",
+          "ready": 4,
+          "desired": 4,
+          "cpuPct": 4.88458855,
+          "memoryBytes": 259858432,
+          "p95": 9.758490874761218,
+          "state": "healthy"
+        },
+        {
+          "name": "cart",
+          "ready": 3,
+          "desired": 3,
+          "cpuPct": 2.11147295,
+          "memoryBytes": 203382784,
+          "p95": 89.99999999999945,
+          "state": "healthy"
+        },
+        {
+          "name": "payment",
+          "ready": 2,
+          "desired": 2,
+          "cpuPct": 0.8558464,
+          "memoryBytes": 126124032,
+          "p95": 245,
+          "state": "healthy"
+        },
+        {
+          "name": "postgres",
+          "ready": 1,
+          "desired": 1,
+          "cpuPct": 2.0389845,
+          "memoryBytes": 65863680,
+          "p95": null,
+          "state": "healthy"
+        },
+        {
+          "name": "redis",
+          "ready": 1,
+          "desired": 1,
+          "cpuPct": 1.61574595,
+          "memoryBytes": 15122432,
+          "p95": null,
+          "state": "healthy"
+        },
+        {
+          "name": "order-worker",
+          "ready": 1,
+          "desired": 1,
+          "cpuPct": 0.6688834,
+          "memoryBytes": 62685184,
+          "p95": null,
+          "state": "healthy"
+        },
+        {
+          "name": "chaos-controller",
+          "ready": 1,
+          "desired": 1,
+          "cpuPct": 0.4060721,
+          "memoryBytes": 58093568,
+          "p95": null,
+          "state": "healthy"
+        },
+        {
+          "name": "traffic-generator",
+          "ready": 1,
+          "desired": 1,
+          "cpuPct": 2.55013575,
+          "memoryBytes": 72101888,
+          "p95": null,
+          "state": "healthy"
+        },
+        {
+          "name": "telemetry-api",
+          "ready": 1,
+          "desired": 1,
+          "cpuPct": 2.87525555,
+          "memoryBytes": 89997312,
+          "p95": 4.75,
+          "state": "healthy"
+        },
+        {
+          "name": "otel-collector",
+          "ready": 1,
+          "desired": 1,
+          "cpuPct": 1.1616080500000001,
+          "memoryBytes": 135880704,
+          "p95": null,
+          "state": "healthy"
+        },
+        {
+          "name": "prometheus",
+          "ready": 1,
+          "desired": 1,
+          "cpuPct": 2.1670651999999997,
+          "memoryBytes": 140414976,
+          "p95": null,
+          "state": "healthy"
+        },
+        {
+          "name": "jaeger",
+          "ready": 1,
+          "desired": 1,
+          "cpuPct": 0.16872725,
+          "memoryBytes": 217001984,
+          "p95": null,
+          "state": "healthy"
+        },
+        {
+          "name": "web",
+          "ready": 1,
+          "desired": 1,
+          "cpuPct": 0.0077751999999999995,
+          "memoryBytes": 4841472,
+          "p95": null,
+          "state": "healthy"
+        }
+      ],
+      "breaker": "closed",
+      "fault": null,
+      "cooldownUntil": 0,
+      "chaosEnabled": true,
+      "events": [
+        {
+          "ts": 1793554791254,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554791229,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554787022,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554786556,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554773494,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554772743,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554771994,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554764213,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554757372,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554756521,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554755492,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554754707,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554750610,
+          "level": "info",
+          "kind": "recovered",
+          "message": "Recovered in 156.6 s — error rate < 2%, p95 < 250 ms and replicas ready for 10 consecutive seconds"
+        },
+        {
+          "ts": 1793554736507,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554736169,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554733640,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554703984,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554678493,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554677877,
+          "level": "info",
+          "kind": "order-settled",
+          "message": "Queued order approved"
+        },
+        {
+          "ts": 1793554677073,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order queued safely; worker will retry payment"
+        },
+        {
+          "ts": 1793554645705,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554632723,
+          "level": "info",
+          "kind": "order-settled",
+          "message": "Queued order approved"
+        },
+        {
+          "ts": 1793554631418,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order queued safely; worker will retry payment"
+        },
+        {
+          "ts": 1793554624641,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554624520,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554624395,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554624098,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554623818,
+          "level": "info",
+          "kind": "fault-cleared",
+          "message": "slow database cleared; cooldown started"
+        },
+        {
+          "ts": 1793554623437,
+          "level": "info",
+          "kind": "order-settled",
+          "message": "Queued order approved"
+        },
+        {
+          "ts": 1793554622269,
+          "level": "info",
+          "kind": "order-settled",
+          "message": "Queued order approved"
+        },
+        {
+          "ts": 1793554618762,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order queued safely; worker will retry payment"
+        },
+        {
+          "ts": 1793554618709,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order queued safely; worker will retry payment"
+        },
+        {
+          "ts": 1793554614136,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554613365,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554611291,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554610244,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554610115,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554603944,
+          "level": "info",
+          "kind": "order-settled",
+          "message": "Queued order approved"
+        },
+        {
+          "ts": 1793554603587,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554603535,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order queued safely; worker will retry payment"
+        },
+        {
+          "ts": 1793554598560,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554598497,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554598497,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554593612,
+          "level": "warn",
+          "kind": "fault-injected",
+          "message": "slow database injected"
+        },
+        {
+          "ts": 1793554591199,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554590876,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554590565,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554587077,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554585992,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554583922,
+          "level": "info",
+          "kind": "recovered",
+          "message": "Recovered in 90.8 s — error rate < 2%, p95 < 250 ms and replicas ready for 10 consecutive seconds"
+        }
+      ],
+      "trace": [
+        {
+          "service": "gateway",
+          "offsetMs": 0,
+          "durationMs": 429.26161899999715,
+          "error": false
+        },
+        {
+          "service": "cart",
+          "offsetMs": 3.463499999954365,
+          "durationMs": 3.0592000000178814,
+          "error": false
+        },
+        {
+          "service": "catalog",
+          "offsetMs": 6.611600000062026,
+          "durationMs": 3.6984999999403954,
+          "error": false
+        },
+        {
+          "service": "payment",
+          "offsetMs": 195.71460900001694,
+          "durationMs": 176.73750699998345,
+          "error": false
+        },
+        {
+          "service": "postgres",
+          "offsetMs": 372.4772159999702,
+          "durationMs": 56.340103000053205,
+          "error": false
+        }
+      ],
+      "recoveries": [
+        {
+          "fault_type": "SLOW_DATABASE",
+          "duration": 156.566,
+          "peak_p95": 4467.1086236435385,
+          "peak_error_rate": 9.438957710298816,
+          "created_at": "2026-11-01 17:39:10.177644+00"
+        },
+        {
+          "fault_type": "SPIKE_TRAFFIC",
+          "duration": 90.789,
+          "peak_p95": 2131.4955752212463,
+          "peak_error_rate": 1.5211637816556702,
+          "created_at": "2026-11-01 17:36:23.86728+00"
+        },
+        {
+          "fault_type": "ADD_CATALOG_LATENCY",
+          "duration": 56.462,
+          "peak_p95": 1738.207547169811,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 17:14:41.729+00"
+        },
+        {
+          "fault_type": "KILL_PAYMENT",
+          "duration": 53.218,
+          "peak_p95": 3410.132158590309,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 17:13:35.747284+00"
+        },
+        {
+          "fault_type": "SLOW_DATABASE",
+          "duration": 54.182,
+          "peak_p95": 496.97674775509086,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 17:12:32.748591+00"
+        },
+        {
+          "fault_type": "SPIKE_TRAFFIC",
+          "duration": 99.808,
+          "peak_p95": 802.2857142857151,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 17:11:29.729755+00"
+        },
+        {
+          "fault_type": "ADD_CATALOG_LATENCY",
+          "duration": 54.461,
+          "peak_p95": 882.0000000000008,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 17:09:34.571696+00"
+        },
+        {
+          "fault_type": "KILL_PAYMENT",
+          "duration": 49.221,
+          "peak_p95": 2226.1363636363562,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 17:07:45.641568+00"
+        },
+        {
+          "fault_type": "SLOW_DATABASE",
+          "duration": 52.843,
+          "peak_p95": 856.2857142857137,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 17:06:44.545013+00"
+        },
+        {
+          "fault_type": "SPIKE_TRAFFIC",
+          "duration": 79.147,
+          "peak_p95": 160.88304334220163,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 17:05:40.479648+00"
+        },
+        {
+          "fault_type": "ADD_CATALOG_LATENCY",
+          "duration": 57.893,
+          "peak_p95": 2104.4067174027937,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 17:04:12.195269+00"
+        },
+        {
+          "fault_type": "KILL_PAYMENT",
+          "duration": 73.579,
+          "peak_p95": 2276.3157894736823,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 17:03:03.240034+00"
+        },
+        {
+          "fault_type": "SLOW_DATABASE",
+          "duration": 52.295,
+          "peak_p95": 1013.3333333333326,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 17:01:40.110617+00"
+        },
+        {
+          "fault_type": "SPIKE_TRAFFIC",
+          "duration": 70.609,
+          "peak_p95": 77.31707317073173,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 16:59:34.126649+00"
+        },
+        {
+          "fault_type": "ADD_CATALOG_LATENCY",
+          "duration": 52.773,
+          "peak_p95": 699.8000000000002,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 16:58:14.145117+00"
+        },
+        {
+          "fault_type": "KILL_PAYMENT",
+          "duration": 32.162,
+          "peak_p95": 1521.328501371815,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 16:57:12.053346+00"
+        },
+        {
+          "fault_type": "SLOW_DATABASE",
+          "duration": 52.733,
+          "peak_p95": 884.9999999999989,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 16:56:30.041908+00"
+        },
+        {
+          "fault_type": "SPIKE_TRAFFIC",
+          "duration": 69.581,
+          "peak_p95": 107.56232986111097,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 16:55:26.035814+00"
+        },
+        {
+          "fault_type": "SPIKE_TRAFFIC",
+          "duration": 409.038,
+          "peak_p95": 59.23565299312951,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 16:53:41.037254+00"
+        },
+        {
+          "fault_type": "ADD_CATALOG_LATENCY",
+          "duration": 54.406,
+          "peak_p95": 3360.2830861967145,
+          "peak_error_rate": 2.510957025939329,
+          "created_at": "2026-11-01 16:46:34.415631+00"
+        }
+      ],
+      "source": "live"
+    },
+    {
+      "ts": 1793554806668,
+      "metrics": {
+        "rps": 25.19047619047619,
+        "errorRatePct": 0.9451795841209829,
+        "p50": 8.15312046444122,
+        "p95": 87.34693877551027,
+        "p99": 1227.6923076923101
+      },
+      "services": [
+        {
+          "name": "gateway",
+          "ready": 5,
+          "desired": 5,
+          "cpuPct": 9.622897250000001,
+          "memoryBytes": 344526848,
+          "p95": 87.34693877551027,
+          "state": "healthy"
+        },
+        {
+          "name": "catalog",
+          "ready": 4,
+          "desired": 4,
+          "cpuPct": 4.88458855,
+          "memoryBytes": 259858432,
+          "p95": 19.166666666666664,
+          "state": "healthy"
+        },
+        {
+          "name": "cart",
+          "ready": 3,
+          "desired": 3,
+          "cpuPct": 2.11147295,
+          "memoryBytes": 203382784,
+          "p95": 74.9999999999996,
+          "state": "healthy"
+        },
+        {
+          "name": "payment",
+          "ready": 2,
+          "desired": 2,
+          "cpuPct": 0.8558464,
+          "memoryBytes": 126124032,
+          "p95": null,
+          "state": "healthy"
+        },
+        {
+          "name": "postgres",
+          "ready": 1,
+          "desired": 1,
+          "cpuPct": 2.0389845,
+          "memoryBytes": 65863680,
+          "p95": null,
+          "state": "healthy"
+        },
+        {
+          "name": "redis",
+          "ready": 1,
+          "desired": 1,
+          "cpuPct": 1.61574595,
+          "memoryBytes": 15122432,
+          "p95": null,
+          "state": "healthy"
+        },
+        {
+          "name": "order-worker",
+          "ready": 1,
+          "desired": 1,
+          "cpuPct": 0.6688834,
+          "memoryBytes": 62685184,
+          "p95": null,
+          "state": "healthy"
+        },
+        {
+          "name": "chaos-controller",
+          "ready": 1,
+          "desired": 1,
+          "cpuPct": 0.4060721,
+          "memoryBytes": 58093568,
+          "p95": null,
+          "state": "healthy"
+        },
+        {
+          "name": "traffic-generator",
+          "ready": 1,
+          "desired": 1,
+          "cpuPct": 2.55013575,
+          "memoryBytes": 72101888,
+          "p95": null,
+          "state": "healthy"
+        },
+        {
+          "name": "telemetry-api",
+          "ready": 1,
+          "desired": 1,
+          "cpuPct": 2.87525555,
+          "memoryBytes": 89997312,
+          "p95": 4.75,
+          "state": "healthy"
+        },
+        {
+          "name": "otel-collector",
+          "ready": 1,
+          "desired": 1,
+          "cpuPct": 1.1616080500000001,
+          "memoryBytes": 135880704,
+          "p95": null,
+          "state": "healthy"
+        },
+        {
+          "name": "prometheus",
+          "ready": 1,
+          "desired": 1,
+          "cpuPct": 2.1670651999999997,
+          "memoryBytes": 140414976,
+          "p95": null,
+          "state": "healthy"
+        },
+        {
+          "name": "jaeger",
+          "ready": 1,
+          "desired": 1,
+          "cpuPct": 0.16872725,
+          "memoryBytes": 217001984,
+          "p95": null,
+          "state": "healthy"
+        },
+        {
+          "name": "web",
+          "ready": 1,
+          "desired": 1,
+          "cpuPct": 0.0077751999999999995,
+          "memoryBytes": 4841472,
+          "p95": null,
+          "state": "healthy"
+        }
+      ],
+      "breaker": "closed",
+      "fault": null,
+      "cooldownUntil": 0,
+      "chaosEnabled": true,
+      "events": [
+        {
+          "ts": 1793554791254,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554791229,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554787022,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554786556,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554773494,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554772743,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554771994,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554764213,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554757372,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554756521,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554755492,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554754707,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554750610,
+          "level": "info",
+          "kind": "recovered",
+          "message": "Recovered in 156.6 s — error rate < 2%, p95 < 250 ms and replicas ready for 10 consecutive seconds"
+        },
+        {
+          "ts": 1793554736507,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554736169,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554733640,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554703984,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554678493,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554677877,
+          "level": "info",
+          "kind": "order-settled",
+          "message": "Queued order approved"
+        },
+        {
+          "ts": 1793554677073,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order queued safely; worker will retry payment"
+        },
+        {
+          "ts": 1793554645705,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554632723,
+          "level": "info",
+          "kind": "order-settled",
+          "message": "Queued order approved"
+        },
+        {
+          "ts": 1793554631418,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order queued safely; worker will retry payment"
+        },
+        {
+          "ts": 1793554624641,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554624520,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554624395,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554624098,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554623818,
+          "level": "info",
+          "kind": "fault-cleared",
+          "message": "slow database cleared; cooldown started"
+        },
+        {
+          "ts": 1793554623437,
+          "level": "info",
+          "kind": "order-settled",
+          "message": "Queued order approved"
+        },
+        {
+          "ts": 1793554622269,
+          "level": "info",
+          "kind": "order-settled",
+          "message": "Queued order approved"
+        },
+        {
+          "ts": 1793554618762,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order queued safely; worker will retry payment"
+        },
+        {
+          "ts": 1793554618709,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order queued safely; worker will retry payment"
+        },
+        {
+          "ts": 1793554614136,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554613365,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554611291,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554610244,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554610115,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554603944,
+          "level": "info",
+          "kind": "order-settled",
+          "message": "Queued order approved"
+        },
+        {
+          "ts": 1793554603587,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554603535,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order queued safely; worker will retry payment"
+        },
+        {
+          "ts": 1793554598560,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554598497,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554598497,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554593612,
+          "level": "warn",
+          "kind": "fault-injected",
+          "message": "slow database injected"
+        },
+        {
+          "ts": 1793554591199,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554590876,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554590565,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554587077,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554585992,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554583922,
+          "level": "info",
+          "kind": "recovered",
+          "message": "Recovered in 90.8 s — error rate < 2%, p95 < 250 ms and replicas ready for 10 consecutive seconds"
+        }
+      ],
+      "trace": [
+        {
+          "service": "gateway",
+          "offsetMs": 0,
+          "durationMs": 429.26161899999715,
+          "error": false
+        },
+        {
+          "service": "cart",
+          "offsetMs": 3.463499999954365,
+          "durationMs": 3.0592000000178814,
+          "error": false
+        },
+        {
+          "service": "catalog",
+          "offsetMs": 6.611600000062026,
+          "durationMs": 3.6984999999403954,
+          "error": false
+        },
+        {
+          "service": "payment",
+          "offsetMs": 195.71460900001694,
+          "durationMs": 176.73750699998345,
+          "error": false
+        },
+        {
+          "service": "postgres",
+          "offsetMs": 372.4772159999702,
+          "durationMs": 56.340103000053205,
+          "error": false
+        }
+      ],
+      "recoveries": [
+        {
+          "fault_type": "SLOW_DATABASE",
+          "duration": 156.566,
+          "peak_p95": 4467.1086236435385,
+          "peak_error_rate": 9.438957710298816,
+          "created_at": "2026-11-01 17:39:10.177644+00"
+        },
+        {
+          "fault_type": "SPIKE_TRAFFIC",
+          "duration": 90.789,
+          "peak_p95": 2131.4955752212463,
+          "peak_error_rate": 1.5211637816556702,
+          "created_at": "2026-11-01 17:36:23.86728+00"
+        },
+        {
+          "fault_type": "ADD_CATALOG_LATENCY",
+          "duration": 56.462,
+          "peak_p95": 1738.207547169811,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 17:14:41.729+00"
+        },
+        {
+          "fault_type": "KILL_PAYMENT",
+          "duration": 53.218,
+          "peak_p95": 3410.132158590309,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 17:13:35.747284+00"
+        },
+        {
+          "fault_type": "SLOW_DATABASE",
+          "duration": 54.182,
+          "peak_p95": 496.97674775509086,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 17:12:32.748591+00"
+        },
+        {
+          "fault_type": "SPIKE_TRAFFIC",
+          "duration": 99.808,
+          "peak_p95": 802.2857142857151,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 17:11:29.729755+00"
+        },
+        {
+          "fault_type": "ADD_CATALOG_LATENCY",
+          "duration": 54.461,
+          "peak_p95": 882.0000000000008,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 17:09:34.571696+00"
+        },
+        {
+          "fault_type": "KILL_PAYMENT",
+          "duration": 49.221,
+          "peak_p95": 2226.1363636363562,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 17:07:45.641568+00"
+        },
+        {
+          "fault_type": "SLOW_DATABASE",
+          "duration": 52.843,
+          "peak_p95": 856.2857142857137,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 17:06:44.545013+00"
+        },
+        {
+          "fault_type": "SPIKE_TRAFFIC",
+          "duration": 79.147,
+          "peak_p95": 160.88304334220163,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 17:05:40.479648+00"
+        },
+        {
+          "fault_type": "ADD_CATALOG_LATENCY",
+          "duration": 57.893,
+          "peak_p95": 2104.4067174027937,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 17:04:12.195269+00"
+        },
+        {
+          "fault_type": "KILL_PAYMENT",
+          "duration": 73.579,
+          "peak_p95": 2276.3157894736823,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 17:03:03.240034+00"
+        },
+        {
+          "fault_type": "SLOW_DATABASE",
+          "duration": 52.295,
+          "peak_p95": 1013.3333333333326,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 17:01:40.110617+00"
+        },
+        {
+          "fault_type": "SPIKE_TRAFFIC",
+          "duration": 70.609,
+          "peak_p95": 77.31707317073173,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 16:59:34.126649+00"
+        },
+        {
+          "fault_type": "ADD_CATALOG_LATENCY",
+          "duration": 52.773,
+          "peak_p95": 699.8000000000002,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 16:58:14.145117+00"
+        },
+        {
+          "fault_type": "KILL_PAYMENT",
+          "duration": 32.162,
+          "peak_p95": 1521.328501371815,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 16:57:12.053346+00"
+        },
+        {
+          "fault_type": "SLOW_DATABASE",
+          "duration": 52.733,
+          "peak_p95": 884.9999999999989,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 16:56:30.041908+00"
+        },
+        {
+          "fault_type": "SPIKE_TRAFFIC",
+          "duration": 69.581,
+          "peak_p95": 107.56232986111097,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 16:55:26.035814+00"
+        },
+        {
+          "fault_type": "SPIKE_TRAFFIC",
+          "duration": 409.038,
+          "peak_p95": 59.23565299312951,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 16:53:41.037254+00"
+        },
+        {
+          "fault_type": "ADD_CATALOG_LATENCY",
+          "duration": 54.406,
+          "peak_p95": 3360.2830861967145,
+          "peak_error_rate": 2.510957025939329,
+          "created_at": "2026-11-01 16:46:34.415631+00"
+        }
+      ],
+      "source": "live"
+    },
+    {
+      "ts": 1793554808664,
+      "metrics": {
+        "rps": 27.452380952380953,
+        "errorRatePct": 0.8673026886383347,
+        "p50": 8.439536567704563,
+        "p95": 152.18749999999986,
+        "p99": 1306.5384615384617
+      },
+      "services": [
+        {
+          "name": "gateway",
+          "ready": 5,
+          "desired": 5,
+          "cpuPct": 9.622897250000001,
+          "memoryBytes": 344526848,
+          "p95": 152.18749999999986,
+          "state": "healthy"
+        },
+        {
+          "name": "catalog",
+          "ready": 4,
+          "desired": 4,
+          "cpuPct": 4.88458855,
+          "memoryBytes": 259858432,
+          "p95": 29.166666666666565,
+          "state": "healthy"
+        },
+        {
+          "name": "cart",
+          "ready": 3,
+          "desired": 3,
+          "cpuPct": 2.11147295,
+          "memoryBytes": 203382784,
+          "p95": 23.426829268292675,
+          "state": "healthy"
+        },
+        {
+          "name": "payment",
+          "ready": 2,
+          "desired": 2,
+          "cpuPct": 0.8558464,
+          "memoryBytes": 126124032,
+          "p95": null,
+          "state": "healthy"
+        },
+        {
+          "name": "postgres",
+          "ready": 1,
+          "desired": 1,
+          "cpuPct": 2.0389845,
+          "memoryBytes": 65863680,
+          "p95": null,
+          "state": "healthy"
+        },
+        {
+          "name": "redis",
+          "ready": 1,
+          "desired": 1,
+          "cpuPct": 1.61574595,
+          "memoryBytes": 15122432,
+          "p95": null,
+          "state": "healthy"
+        },
+        {
+          "name": "order-worker",
+          "ready": 1,
+          "desired": 1,
+          "cpuPct": 0.6688834,
+          "memoryBytes": 62685184,
+          "p95": null,
+          "state": "healthy"
+        },
+        {
+          "name": "chaos-controller",
+          "ready": 1,
+          "desired": 1,
+          "cpuPct": 0.4060721,
+          "memoryBytes": 58093568,
+          "p95": null,
+          "state": "healthy"
+        },
+        {
+          "name": "traffic-generator",
+          "ready": 1,
+          "desired": 1,
+          "cpuPct": 2.55013575,
+          "memoryBytes": 72101888,
+          "p95": null,
+          "state": "healthy"
+        },
+        {
+          "name": "telemetry-api",
+          "ready": 1,
+          "desired": 1,
+          "cpuPct": 2.87525555,
+          "memoryBytes": 89997312,
+          "p95": 235,
+          "state": "healthy"
+        },
+        {
+          "name": "otel-collector",
+          "ready": 1,
+          "desired": 1,
+          "cpuPct": 1.1616080500000001,
+          "memoryBytes": 135880704,
+          "p95": null,
+          "state": "healthy"
+        },
+        {
+          "name": "prometheus",
+          "ready": 1,
+          "desired": 1,
+          "cpuPct": 2.1670651999999997,
+          "memoryBytes": 140414976,
+          "p95": null,
+          "state": "healthy"
+        },
+        {
+          "name": "jaeger",
+          "ready": 1,
+          "desired": 1,
+          "cpuPct": 0.16872725,
+          "memoryBytes": 217001984,
+          "p95": null,
+          "state": "healthy"
+        },
+        {
+          "name": "web",
+          "ready": 1,
+          "desired": 1,
+          "cpuPct": 0.0077751999999999995,
+          "memoryBytes": 4841472,
+          "p95": null,
+          "state": "healthy"
+        }
+      ],
+      "breaker": "closed",
+      "fault": null,
+      "cooldownUntil": 0,
+      "chaosEnabled": true,
+      "events": [
+        {
+          "ts": 1793554808306,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554808264,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554791254,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554791229,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554787022,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554786556,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554773494,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554772743,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554771994,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554764213,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554757372,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554756521,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554755492,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554754707,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554750610,
+          "level": "info",
+          "kind": "recovered",
+          "message": "Recovered in 156.6 s — error rate < 2%, p95 < 250 ms and replicas ready for 10 consecutive seconds"
+        },
+        {
+          "ts": 1793554736507,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554736169,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554733640,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554703984,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554678493,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554677877,
+          "level": "info",
+          "kind": "order-settled",
+          "message": "Queued order approved"
+        },
+        {
+          "ts": 1793554677073,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order queued safely; worker will retry payment"
+        },
+        {
+          "ts": 1793554645705,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554632723,
+          "level": "info",
+          "kind": "order-settled",
+          "message": "Queued order approved"
+        },
+        {
+          "ts": 1793554631418,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order queued safely; worker will retry payment"
+        },
+        {
+          "ts": 1793554624641,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554624520,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554624395,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554624098,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554623818,
+          "level": "info",
+          "kind": "fault-cleared",
+          "message": "slow database cleared; cooldown started"
+        },
+        {
+          "ts": 1793554623437,
+          "level": "info",
+          "kind": "order-settled",
+          "message": "Queued order approved"
+        },
+        {
+          "ts": 1793554622269,
+          "level": "info",
+          "kind": "order-settled",
+          "message": "Queued order approved"
+        },
+        {
+          "ts": 1793554618762,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order queued safely; worker will retry payment"
+        },
+        {
+          "ts": 1793554618709,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order queued safely; worker will retry payment"
+        },
+        {
+          "ts": 1793554614136,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554613365,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554611291,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554610244,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554610115,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554603944,
+          "level": "info",
+          "kind": "order-settled",
+          "message": "Queued order approved"
+        },
+        {
+          "ts": 1793554603587,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554603535,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order queued safely; worker will retry payment"
+        },
+        {
+          "ts": 1793554598560,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554598497,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554598497,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554593612,
+          "level": "warn",
+          "kind": "fault-injected",
+          "message": "slow database injected"
+        },
+        {
+          "ts": 1793554591199,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554590876,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554590565,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554587077,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        }
+      ],
+      "trace": [
+        {
+          "service": "gateway",
+          "offsetMs": 0,
+          "durationMs": 1652.3102889999282,
+          "error": false
+        },
+        {
+          "service": "cart",
+          "offsetMs": 1.2826999999815598,
+          "durationMs": 3.0575999999418855,
+          "error": false
+        },
+        {
+          "service": "catalog",
+          "offsetMs": 4.42719999991823,
+          "durationMs": 4.019000000087544,
+          "error": false
+        },
+        {
+          "service": "payment",
+          "offsetMs": 1333.4910909999162,
+          "durationMs": 194.22349900007248,
+          "error": false
+        },
+        {
+          "service": "postgres",
+          "offsetMs": 1527.7933900000062,
+          "durationMs": 124.01539899990894,
+          "error": false
+        }
+      ],
+      "recoveries": [
+        {
+          "fault_type": "SLOW_DATABASE",
+          "duration": 156.566,
+          "peak_p95": 4467.1086236435385,
+          "peak_error_rate": 9.438957710298816,
+          "created_at": "2026-11-01 17:39:10.177644+00"
+        },
+        {
+          "fault_type": "SPIKE_TRAFFIC",
+          "duration": 90.789,
+          "peak_p95": 2131.4955752212463,
+          "peak_error_rate": 1.5211637816556702,
+          "created_at": "2026-11-01 17:36:23.86728+00"
+        },
+        {
+          "fault_type": "ADD_CATALOG_LATENCY",
+          "duration": 56.462,
+          "peak_p95": 1738.207547169811,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 17:14:41.729+00"
+        },
+        {
+          "fault_type": "KILL_PAYMENT",
+          "duration": 53.218,
+          "peak_p95": 3410.132158590309,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 17:13:35.747284+00"
+        },
+        {
+          "fault_type": "SLOW_DATABASE",
+          "duration": 54.182,
+          "peak_p95": 496.97674775509086,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 17:12:32.748591+00"
+        },
+        {
+          "fault_type": "SPIKE_TRAFFIC",
+          "duration": 99.808,
+          "peak_p95": 802.2857142857151,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 17:11:29.729755+00"
+        },
+        {
+          "fault_type": "ADD_CATALOG_LATENCY",
+          "duration": 54.461,
+          "peak_p95": 882.0000000000008,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 17:09:34.571696+00"
+        },
+        {
+          "fault_type": "KILL_PAYMENT",
+          "duration": 49.221,
+          "peak_p95": 2226.1363636363562,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 17:07:45.641568+00"
+        },
+        {
+          "fault_type": "SLOW_DATABASE",
+          "duration": 52.843,
+          "peak_p95": 856.2857142857137,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 17:06:44.545013+00"
+        },
+        {
+          "fault_type": "SPIKE_TRAFFIC",
+          "duration": 79.147,
+          "peak_p95": 160.88304334220163,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 17:05:40.479648+00"
+        },
+        {
+          "fault_type": "ADD_CATALOG_LATENCY",
+          "duration": 57.893,
+          "peak_p95": 2104.4067174027937,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 17:04:12.195269+00"
+        },
+        {
+          "fault_type": "KILL_PAYMENT",
+          "duration": 73.579,
+          "peak_p95": 2276.3157894736823,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 17:03:03.240034+00"
+        },
+        {
+          "fault_type": "SLOW_DATABASE",
+          "duration": 52.295,
+          "peak_p95": 1013.3333333333326,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 17:01:40.110617+00"
+        },
+        {
+          "fault_type": "SPIKE_TRAFFIC",
+          "duration": 70.609,
+          "peak_p95": 77.31707317073173,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 16:59:34.126649+00"
+        },
+        {
+          "fault_type": "ADD_CATALOG_LATENCY",
+          "duration": 52.773,
+          "peak_p95": 699.8000000000002,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 16:58:14.145117+00"
+        },
+        {
+          "fault_type": "KILL_PAYMENT",
+          "duration": 32.162,
+          "peak_p95": 1521.328501371815,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 16:57:12.053346+00"
+        },
+        {
+          "fault_type": "SLOW_DATABASE",
+          "duration": 52.733,
+          "peak_p95": 884.9999999999989,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 16:56:30.041908+00"
+        },
+        {
+          "fault_type": "SPIKE_TRAFFIC",
+          "duration": 69.581,
+          "peak_p95": 107.56232986111097,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 16:55:26.035814+00"
+        },
+        {
+          "fault_type": "SPIKE_TRAFFIC",
+          "duration": 409.038,
+          "peak_p95": 59.23565299312951,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 16:53:41.037254+00"
+        },
+        {
+          "fault_type": "ADD_CATALOG_LATENCY",
+          "duration": 54.406,
+          "peak_p95": 3360.2830861967145,
+          "peak_error_rate": 2.510957025939329,
+          "created_at": "2026-11-01 16:46:34.415631+00"
+        }
+      ],
+      "source": "live"
+    },
+    {
+      "ts": 1793554811304,
+      "metrics": {
+        "rps": 24.22689575648463,
+        "errorRatePct": 0.9539487163263619,
+        "p50": 8.905615819503522,
+        "p95": 454.8092231008802,
+        "p99": 1471.7790656163018
+      },
+      "services": [
+        {
+          "name": "gateway",
+          "ready": 5,
+          "desired": 5,
+          "cpuPct": 9.622897250000001,
+          "memoryBytes": 344526848,
+          "p95": 454.8158319844242,
+          "state": "degraded"
+        },
+        {
+          "name": "catalog",
+          "ready": 4,
+          "desired": 4,
+          "cpuPct": 4.88458855,
+          "memoryBytes": 259858432,
+          "p95": 37.22318909966099,
+          "state": "healthy"
+        },
+        {
+          "name": "cart",
+          "ready": 3,
+          "desired": 3,
+          "cpuPct": 2.11147295,
+          "memoryBytes": 203382784,
+          "p95": 23.208092077390173,
+          "state": "healthy"
+        },
+        {
+          "name": "payment",
+          "ready": 2,
+          "desired": 2,
+          "cpuPct": 0.8558464,
+          "memoryBytes": 126124032,
+          "p95": null,
+          "state": "healthy"
+        },
+        {
+          "name": "postgres",
+          "ready": 1,
+          "desired": 1,
+          "cpuPct": 2.0389845,
+          "memoryBytes": 65863680,
+          "p95": null,
+          "state": "healthy"
+        },
+        {
+          "name": "redis",
+          "ready": 1,
+          "desired": 1,
+          "cpuPct": 1.61574595,
+          "memoryBytes": 15122432,
+          "p95": null,
+          "state": "healthy"
+        },
+        {
+          "name": "order-worker",
+          "ready": 1,
+          "desired": 1,
+          "cpuPct": 0.6688834,
+          "memoryBytes": 62685184,
+          "p95": null,
+          "state": "healthy"
+        },
+        {
+          "name": "chaos-controller",
+          "ready": 1,
+          "desired": 1,
+          "cpuPct": 0.4060721,
+          "memoryBytes": 58093568,
+          "p95": null,
+          "state": "healthy"
+        },
+        {
+          "name": "traffic-generator",
+          "ready": 1,
+          "desired": 1,
+          "cpuPct": 2.55013575,
+          "memoryBytes": 72101888,
+          "p95": null,
+          "state": "healthy"
+        },
+        {
+          "name": "telemetry-api",
+          "ready": 1,
+          "desired": 1,
+          "cpuPct": 2.87525555,
+          "memoryBytes": 89997312,
+          "p95": 235,
+          "state": "healthy"
+        },
+        {
+          "name": "otel-collector",
+          "ready": 1,
+          "desired": 1,
+          "cpuPct": 1.1616080500000001,
+          "memoryBytes": 135880704,
+          "p95": null,
+          "state": "healthy"
+        },
+        {
+          "name": "prometheus",
+          "ready": 1,
+          "desired": 1,
+          "cpuPct": 2.1670651999999997,
+          "memoryBytes": 140414976,
+          "p95": null,
+          "state": "healthy"
+        },
+        {
+          "name": "jaeger",
+          "ready": 1,
+          "desired": 1,
+          "cpuPct": 0.16872725,
+          "memoryBytes": 217001984,
+          "p95": null,
+          "state": "healthy"
+        },
+        {
+          "name": "web",
+          "ready": 1,
+          "desired": 1,
+          "cpuPct": 0.0077751999999999995,
+          "memoryBytes": 4841472,
+          "p95": null,
+          "state": "healthy"
+        }
+      ],
+      "breaker": "closed",
+      "fault": null,
+      "cooldownUntil": 0,
+      "chaosEnabled": true,
+      "events": [
+        {
+          "ts": 1793554808306,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554808264,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554791254,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554791229,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554787022,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554786556,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554773494,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554772743,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554771994,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554764213,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554757372,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554756521,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554755492,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554754707,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554750610,
+          "level": "info",
+          "kind": "recovered",
+          "message": "Recovered in 156.6 s — error rate < 2%, p95 < 250 ms and replicas ready for 10 consecutive seconds"
+        },
+        {
+          "ts": 1793554736507,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554736169,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554733640,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554703984,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554678493,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554677877,
+          "level": "info",
+          "kind": "order-settled",
+          "message": "Queued order approved"
+        },
+        {
+          "ts": 1793554677073,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order queued safely; worker will retry payment"
+        },
+        {
+          "ts": 1793554645705,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554632723,
+          "level": "info",
+          "kind": "order-settled",
+          "message": "Queued order approved"
+        },
+        {
+          "ts": 1793554631418,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order queued safely; worker will retry payment"
+        },
+        {
+          "ts": 1793554624641,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554624520,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554624395,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554624098,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554623818,
+          "level": "info",
+          "kind": "fault-cleared",
+          "message": "slow database cleared; cooldown started"
+        },
+        {
+          "ts": 1793554623437,
+          "level": "info",
+          "kind": "order-settled",
+          "message": "Queued order approved"
+        },
+        {
+          "ts": 1793554622269,
+          "level": "info",
+          "kind": "order-settled",
+          "message": "Queued order approved"
+        },
+        {
+          "ts": 1793554618762,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order queued safely; worker will retry payment"
+        },
+        {
+          "ts": 1793554618709,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order queued safely; worker will retry payment"
+        },
+        {
+          "ts": 1793554614136,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554613365,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554611291,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554610244,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554610115,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554603944,
+          "level": "info",
+          "kind": "order-settled",
+          "message": "Queued order approved"
+        },
+        {
+          "ts": 1793554603587,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554603535,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order queued safely; worker will retry payment"
+        },
+        {
+          "ts": 1793554598560,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554598497,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554598497,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554593612,
+          "level": "warn",
+          "kind": "fault-injected",
+          "message": "slow database injected"
+        },
+        {
+          "ts": 1793554591199,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554590876,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554590565,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554587077,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        }
+      ],
+      "trace": [
+        {
+          "service": "gateway",
+          "offsetMs": 0,
+          "durationMs": 1652.3102889999282,
+          "error": false
+        },
+        {
+          "service": "cart",
+          "offsetMs": 1.2826999999815598,
+          "durationMs": 3.0575999999418855,
+          "error": false
+        },
+        {
+          "service": "catalog",
+          "offsetMs": 4.42719999991823,
+          "durationMs": 4.019000000087544,
+          "error": false
+        },
+        {
+          "service": "payment",
+          "offsetMs": 1333.4910909999162,
+          "durationMs": 194.22349900007248,
+          "error": false
+        },
+        {
+          "service": "postgres",
+          "offsetMs": 1527.7933900000062,
+          "durationMs": 124.01539899990894,
+          "error": false
+        }
+      ],
+      "recoveries": [
+        {
+          "fault_type": "SLOW_DATABASE",
+          "duration": 156.566,
+          "peak_p95": 4467.1086236435385,
+          "peak_error_rate": 9.438957710298816,
+          "created_at": "2026-11-01 17:39:10.177644+00"
+        },
+        {
+          "fault_type": "SPIKE_TRAFFIC",
+          "duration": 90.789,
+          "peak_p95": 2131.4955752212463,
+          "peak_error_rate": 1.5211637816556702,
+          "created_at": "2026-11-01 17:36:23.86728+00"
+        },
+        {
+          "fault_type": "ADD_CATALOG_LATENCY",
+          "duration": 56.462,
+          "peak_p95": 1738.207547169811,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 17:14:41.729+00"
+        },
+        {
+          "fault_type": "KILL_PAYMENT",
+          "duration": 53.218,
+          "peak_p95": 3410.132158590309,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 17:13:35.747284+00"
+        },
+        {
+          "fault_type": "SLOW_DATABASE",
+          "duration": 54.182,
+          "peak_p95": 496.97674775509086,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 17:12:32.748591+00"
+        },
+        {
+          "fault_type": "SPIKE_TRAFFIC",
+          "duration": 99.808,
+          "peak_p95": 802.2857142857151,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 17:11:29.729755+00"
+        },
+        {
+          "fault_type": "ADD_CATALOG_LATENCY",
+          "duration": 54.461,
+          "peak_p95": 882.0000000000008,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 17:09:34.571696+00"
+        },
+        {
+          "fault_type": "KILL_PAYMENT",
+          "duration": 49.221,
+          "peak_p95": 2226.1363636363562,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 17:07:45.641568+00"
+        },
+        {
+          "fault_type": "SLOW_DATABASE",
+          "duration": 52.843,
+          "peak_p95": 856.2857142857137,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 17:06:44.545013+00"
+        },
+        {
+          "fault_type": "SPIKE_TRAFFIC",
+          "duration": 79.147,
+          "peak_p95": 160.88304334220163,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 17:05:40.479648+00"
+        },
+        {
+          "fault_type": "ADD_CATALOG_LATENCY",
+          "duration": 57.893,
+          "peak_p95": 2104.4067174027937,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 17:04:12.195269+00"
+        },
+        {
+          "fault_type": "KILL_PAYMENT",
+          "duration": 73.579,
+          "peak_p95": 2276.3157894736823,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 17:03:03.240034+00"
+        },
+        {
+          "fault_type": "SLOW_DATABASE",
+          "duration": 52.295,
+          "peak_p95": 1013.3333333333326,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 17:01:40.110617+00"
+        },
+        {
+          "fault_type": "SPIKE_TRAFFIC",
+          "duration": 70.609,
+          "peak_p95": 77.31707317073173,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 16:59:34.126649+00"
+        },
+        {
+          "fault_type": "ADD_CATALOG_LATENCY",
+          "duration": 52.773,
+          "peak_p95": 699.8000000000002,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 16:58:14.145117+00"
+        },
+        {
+          "fault_type": "KILL_PAYMENT",
+          "duration": 32.162,
+          "peak_p95": 1521.328501371815,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 16:57:12.053346+00"
+        },
+        {
+          "fault_type": "SLOW_DATABASE",
+          "duration": 52.733,
+          "peak_p95": 884.9999999999989,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 16:56:30.041908+00"
+        },
+        {
+          "fault_type": "SPIKE_TRAFFIC",
+          "duration": 69.581,
+          "peak_p95": 107.56232986111097,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 16:55:26.035814+00"
+        },
+        {
+          "fault_type": "SPIKE_TRAFFIC",
+          "duration": 409.038,
+          "peak_p95": 59.23565299312951,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 16:53:41.037254+00"
+        },
+        {
+          "fault_type": "ADD_CATALOG_LATENCY",
+          "duration": 54.406,
+          "peak_p95": 3360.2830861967145,
+          "peak_error_rate": 2.510957025939329,
+          "created_at": "2026-11-01 16:46:34.415631+00"
+        }
+      ],
+      "source": "live"
+    },
+    {
+      "ts": 1793554820433,
+      "metrics": {
+        "rps": 17.09681604439445,
+        "errorRatePct": 0.4579582121846111,
+        "p50": 13.067768900726572,
+        "p95": 676.2806524189521,
+        "p99": 1985.5607694566347
+      },
+      "services": [
+        {
+          "name": "gateway",
+          "ready": 5,
+          "desired": 5,
+          "cpuPct": 9.318772449999999,
+          "memoryBytes": 346451968,
+          "p95": 676.2806524189521,
+          "state": "degraded"
+        },
+        {
+          "name": "catalog",
+          "ready": 4,
+          "desired": 4,
+          "cpuPct": 5.37543285,
+          "memoryBytes": 262098944,
+          "p95": 168.33229193083392,
+          "state": "healthy"
+        },
+        {
+          "name": "cart",
+          "ready": 3,
+          "desired": 3,
+          "cpuPct": 2.0425755,
+          "memoryBytes": 204709888,
+          "p95": 19.218884263298378,
+          "state": "healthy"
+        },
+        {
+          "name": "payment",
+          "ready": 2,
+          "desired": 2,
+          "cpuPct": 0.93645685,
+          "memoryBytes": 126791680,
+          "p95": 474.21013379135775,
+          "state": "degraded"
+        },
+        {
+          "name": "postgres",
+          "ready": 1,
+          "desired": 1,
+          "cpuPct": 2.7373011,
+          "memoryBytes": 65777664,
+          "p95": null,
+          "state": "healthy"
+        },
+        {
+          "name": "redis",
+          "ready": 1,
+          "desired": 1,
+          "cpuPct": 1.69647975,
+          "memoryBytes": 15429632,
+          "p95": null,
+          "state": "healthy"
+        },
+        {
+          "name": "order-worker",
+          "ready": 1,
+          "desired": 1,
+          "cpuPct": 0.5508982499999999,
+          "memoryBytes": 63504384,
+          "p95": null,
+          "state": "healthy"
+        },
+        {
+          "name": "chaos-controller",
+          "ready": 1,
+          "desired": 1,
+          "cpuPct": 0.4190593,
+          "memoryBytes": 58466304,
+          "p95": null,
+          "state": "healthy"
+        },
+        {
+          "name": "traffic-generator",
+          "ready": 1,
+          "desired": 1,
+          "cpuPct": 2.6665373,
+          "memoryBytes": 72953856,
+          "p95": null,
+          "state": "healthy"
+        },
+        {
+          "name": "telemetry-api",
+          "ready": 1,
+          "desired": 1,
+          "cpuPct": 2.3299049,
+          "memoryBytes": 90226688,
+          "p95": 224.99999999999997,
+          "state": "healthy"
+        },
+        {
+          "name": "otel-collector",
+          "ready": 1,
+          "desired": 1,
+          "cpuPct": 1.25340095,
+          "memoryBytes": 138338304,
+          "p95": null,
+          "state": "healthy"
+        },
+        {
+          "name": "prometheus",
+          "ready": 1,
+          "desired": 1,
+          "cpuPct": 2.0194125,
+          "memoryBytes": 139968512,
+          "p95": null,
+          "state": "healthy"
+        },
+        {
+          "name": "jaeger",
+          "ready": 1,
+          "desired": 1,
+          "cpuPct": 0.14916215,
+          "memoryBytes": 216494080,
+          "p95": null,
+          "state": "healthy"
+        },
+        {
+          "name": "web",
+          "ready": 1,
+          "desired": 1,
+          "cpuPct": 0.006575,
+          "memoryBytes": 4841472,
+          "p95": null,
+          "state": "healthy"
+        }
+      ],
+      "breaker": "closed",
+      "fault": {
+        "id": "3f84212c-b035-47f9-be43-3e3e664623c8",
+        "type": "KILL_PAYMENT",
+        "startedAt": 1793554811477,
+        "expiresAt": 1793554901477,
+        "owner": "c9937f5a15afd91488e0250a77a9475dfd942be24fc9c296de76c25d3adba093"
+      },
+      "cooldownUntil": 0,
+      "chaosEnabled": true,
+      "events": [
+        {
+          "ts": 1793554808306,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554808264,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554791254,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554791229,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554787022,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554786556,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554773494,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554772743,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554771994,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554764213,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554757372,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554756521,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554755492,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554754707,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554750610,
+          "level": "info",
+          "kind": "recovered",
+          "message": "Recovered in 156.6 s — error rate < 2%, p95 < 250 ms and replicas ready for 10 consecutive seconds"
+        },
+        {
+          "ts": 1793554736507,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554736169,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554733640,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554703984,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554678493,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554677877,
+          "level": "info",
+          "kind": "order-settled",
+          "message": "Queued order approved"
+        },
+        {
+          "ts": 1793554677073,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order queued safely; worker will retry payment"
+        },
+        {
+          "ts": 1793554645705,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554632723,
+          "level": "info",
+          "kind": "order-settled",
+          "message": "Queued order approved"
+        },
+        {
+          "ts": 1793554631418,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order queued safely; worker will retry payment"
+        },
+        {
+          "ts": 1793554624641,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554624520,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554624395,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554624098,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554623818,
+          "level": "info",
+          "kind": "fault-cleared",
+          "message": "slow database cleared; cooldown started"
+        },
+        {
+          "ts": 1793554623437,
+          "level": "info",
+          "kind": "order-settled",
+          "message": "Queued order approved"
+        },
+        {
+          "ts": 1793554622269,
+          "level": "info",
+          "kind": "order-settled",
+          "message": "Queued order approved"
+        },
+        {
+          "ts": 1793554618762,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order queued safely; worker will retry payment"
+        },
+        {
+          "ts": 1793554618709,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order queued safely; worker will retry payment"
+        },
+        {
+          "ts": 1793554614136,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554613365,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554611291,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554610244,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554610115,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554603944,
+          "level": "info",
+          "kind": "order-settled",
+          "message": "Queued order approved"
+        },
+        {
+          "ts": 1793554603587,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554603535,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order queued safely; worker will retry payment"
+        },
+        {
+          "ts": 1793554598560,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554598497,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554598497,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554593612,
+          "level": "warn",
+          "kind": "fault-injected",
+          "message": "slow database injected"
+        },
+        {
+          "ts": 1793554591199,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554590876,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554590565,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        },
+        {
+          "ts": 1793554587077,
+          "level": "info",
+          "kind": "checkout",
+          "message": "Order confirmed"
+        }
+      ],
+      "trace": [
+        {
+          "service": "gateway",
+          "offsetMs": 0,
+          "durationMs": 1652.3102889999282,
+          "error": false
+        },
+        {
+          "service": "cart",
+          "offsetMs": 1.2826999999815598,
+          "durationMs": 3.0575999999418855,
+          "error": false
+        },
+        {
+          "service": "catalog",
+          "offsetMs": 4.42719999991823,
+          "durationMs": 4.019000000087544,
+          "error": false
+        },
+        {
+          "service": "payment",
+          "offsetMs": 1333.4910909999162,
+          "durationMs": 194.22349900007248,
+          "error": false
+        },
+        {
+          "service": "postgres",
+          "offsetMs": 1527.7933900000062,
+          "durationMs": 124.01539899990894,
+          "error": false
+        }
+      ],
+      "recoveries": [
+        {
+          "fault_type": "SLOW_DATABASE",
+          "duration": 156.566,
+          "peak_p95": 4467.1086236435385,
+          "peak_error_rate": 9.438957710298816,
+          "created_at": "2026-11-01 17:39:10.177644+00"
+        },
+        {
+          "fault_type": "SPIKE_TRAFFIC",
+          "duration": 90.789,
+          "peak_p95": 2131.4955752212463,
+          "peak_error_rate": 1.5211637816556702,
+          "created_at": "2026-11-01 17:36:23.86728+00"
+        },
+        {
+          "fault_type": "ADD_CATALOG_LATENCY",
+          "duration": 56.462,
+          "peak_p95": 1738.207547169811,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 17:14:41.729+00"
+        },
+        {
+          "fault_type": "KILL_PAYMENT",
+          "duration": 53.218,
+          "peak_p95": 3410.132158590309,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 17:13:35.747284+00"
+        },
+        {
+          "fault_type": "SLOW_DATABASE",
+          "duration": 54.182,
+          "peak_p95": 496.97674775509086,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 17:12:32.748591+00"
+        },
+        {
+          "fault_type": "SPIKE_TRAFFIC",
+          "duration": 99.808,
+          "peak_p95": 802.2857142857151,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 17:11:29.729755+00"
+        },
+        {
+          "fault_type": "ADD_CATALOG_LATENCY",
+          "duration": 54.461,
+          "peak_p95": 882.0000000000008,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 17:09:34.571696+00"
+        },
+        {
+          "fault_type": "KILL_PAYMENT",
+          "duration": 49.221,
+          "peak_p95": 2226.1363636363562,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 17:07:45.641568+00"
+        },
+        {
+          "fault_type": "SLOW_DATABASE",
+          "duration": 52.843,
+          "peak_p95": 856.2857142857137,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 17:06:44.545013+00"
+        },
+        {
+          "fault_type": "SPIKE_TRAFFIC",
+          "duration": 79.147,
+          "peak_p95": 160.88304334220163,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 17:05:40.479648+00"
+        },
+        {
+          "fault_type": "ADD_CATALOG_LATENCY",
+          "duration": 57.893,
+          "peak_p95": 2104.4067174027937,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 17:04:12.195269+00"
+        },
+        {
+          "fault_type": "KILL_PAYMENT",
+          "duration": 73.579,
+          "peak_p95": 2276.3157894736823,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 17:03:03.240034+00"
+        },
+        {
+          "fault_type": "SLOW_DATABASE",
+          "duration": 52.295,
+          "peak_p95": 1013.3333333333326,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 17:01:40.110617+00"
+        },
+        {
+          "fault_type": "SPIKE_TRAFFIC",
+          "duration": 70.609,
+          "peak_p95": 77.31707317073173,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 16:59:34.126649+00"
+        },
+        {
+          "fault_type": "ADD_CATALOG_LATENCY",
+          "duration": 52.773,
+          "peak_p95": 699.8000000000002,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 16:58:14.145117+00"
+        },
+        {
+          "fault_type": "KILL_PAYMENT",
+          "duration": 32.162,
+          "peak_p95": 1521.328501371815,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 16:57:12.053346+00"
+        },
+        {
+          "fault_type": "SLOW_DATABASE",
+          "duration": 52.733,
+          "peak_p95": 884.9999999999989,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 16:56:30.041908+00"
+        },
+        {
+          "fault_type": "SPIKE_TRAFFIC",
+          "duration": 69.581,
+          "peak_p95": 107.56232986111097,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 16:55:26.035814+00"
+        },
+        {
+          "fault_type": "SPIKE_TRAFFIC",
+          "duration": 409.038,
+          "peak_p95": 59.23565299312951,
+          "peak_error_rate": 0,
+          "created_at": "2026-11-01 16:53:41.037254+00"
+        },
+        {
+          "fault_type": "ADD_CATALOG_LATENCY",
+          "duration": 54.406,
+          "peak_p95": 3360.2830861967145,
+          "peak_error_rate": 2.510957025939329,
+          "created_at": "2026-11-01 16:46:34.415631+00"
+        }
+      ],
+      "source": "live"
+    }
+  ],
+  "checkouts": [
+    {
+      "ts": 1793554808308,
+      "traceId": "249568bfa63353b76f1187db014c5790",
+      "result": {
+        "status": "confirmed",
+        "orderId": "dbc030fa-3d77-499e-a0d9-47e43a840cd2",
+        "latencyMs": 1653.2720889999764,
+        "attempts": 1,
+        "degraded": false
+      }
+    }
+  ],
+  "collectionErrors": [],
+  "notes": "Incomplete attempt, excluded from successful recovery statistics. Actual collected data is preserved without filling gaps."
+}
