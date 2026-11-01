@@ -1,64 +1,101 @@
 {
-  "measuredAt": "2026-11-01T15:23:24.369Z",
+  "measuredAt": "2026-11-01T19:05:25.838Z",
   "target": "http://localhost:8088",
   "measurements": [
     {
       "type": "KILL_PAYMENT",
-      "queuedOrderId": "75869e5f-0419-407a-b2e0-5f2431818f16",
-      "checkoutMs": 77.9391969999997
+      "queuedOrderId": "e64cca3c-98e2-4b7c-99b5-0de07e039bd3",
+      "checkoutMs": 206.83770599996205
+    },
+    {
+      "type": "KILL_PAYMENT",
+      "configuredTtlMs": 90000,
+      "observedTtlMs": 83612,
+      "flagAlreadyReverted": false
     },
     {
       "type": "KILL_PAYMENT",
       "recovery": {
         "fault_type": "KILL_PAYMENT",
-        "duration": 29.308,
-        "peak_p95": 97.11611111111107,
+        "duration": 34.693,
+        "peak_p95": 481.24999999999585,
         "peak_error_rate": 0,
-        "created_at": "2026-11-01 15:20:11.091338+00"
+        "created_at": "2026-11-01 19:02:07.485173+00"
       }
     },
     {
+      "type": "KILL_PAYMENT",
+      "queuedOrderId": "e64cca3c-98e2-4b7c-99b5-0de07e039bd3",
+      "settledStatus": "confirmed",
+      "paymentRows": 1,
+      "idempotentCharge": true,
+      "streamReplay": true
+    },
+    {
       "type": "ADD_CATALOG_LATENCY",
-      "requestMs": 460.35050000000047
+      "requestMs": 462.3715000000011
+    },
+    {
+      "type": "ADD_CATALOG_LATENCY",
+      "configuredTtlMs": 30000,
+      "observedTtlMs": 29012,
+      "flagAlreadyReverted": false
     },
     {
       "type": "ADD_CATALOG_LATENCY",
       "recovery": {
         "fault_type": "ADD_CATALOG_LATENCY",
-        "duration": 53.677,
-        "peak_p95": 702.4999999999997,
+        "duration": 54.291,
+        "peak_p95": 1039.999999999995,
         "peak_error_rate": 0,
-        "created_at": "2026-11-01 15:21:10.074171+00"
+        "created_at": "2026-11-01 19:03:10.504604+00"
       }
     },
     {
       "type": "SPIKE_TRAFFIC",
-      "baselineRps": 25.142857142857142,
-      "spikeRps": 125.2142857142857
+      "baselineRps": 24.64285714285714,
+      "spikeRps": 122
+    },
+    {
+      "type": "SPIKE_TRAFFIC",
+      "configuredTtlMs": 60000,
+      "observedTtlMs": 59204,
+      "flagAlreadyReverted": false
     },
     {
       "type": "SPIKE_TRAFFIC",
       "recovery": {
         "fault_type": "SPIKE_TRAFFIC",
-        "duration": 70.739,
-        "peak_p95": 236.95488721804506,
-        "peak_error_rate": 0.22692889561270801,
-        "created_at": "2026-11-01 15:22:23.374473+00"
+        "duration": 70.963,
+        "peak_p95": 250.85227272727195,
+        "peak_error_rate": 0,
+        "created_at": "2026-11-01 19:04:23.585869+00"
       }
     },
     {
       "type": "SLOW_DATABASE",
-      "requestMs": 257.03059999999823
+      "requestMs": 262.872000000003
+    },
+    {
+      "type": "SLOW_DATABASE",
+      "configuredTtlMs": 30000,
+      "observedTtlMs": 29244,
+      "flagAlreadyReverted": false
     },
     {
       "type": "SLOW_DATABASE",
       "recovery": {
         "fault_type": "SLOW_DATABASE",
-        "duration": 52.837,
-        "peak_p95": 1221.4285714285716,
+        "duration": 53.226,
+        "peak_p95": 865.9999999999995,
         "peak_error_rate": 0,
-        "created_at": "2026-11-01 15:23:22.148313+00"
+        "created_at": "2026-11-01 19:05:22.688042+00"
       }
+    },
+    {
+      "visitorQuotaStatus": 429,
+      "seededPriorUses": 3,
+      "cooldownVerified": true
     }
   ]
 }
