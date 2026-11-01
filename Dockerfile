@@ -22,7 +22,7 @@ COPY apps/local-adapter/package.json apps/local-adapter/package.json
 COPY packages/common/package.json packages/common/package.json
 RUN pnpm install --prod --frozen-lockfile --ignore-scripts
 
-FROM gcr.io/distroless/cc-debian12:nonroot AS service
+FROM gcr.io/distroless/cc-debian13:nonroot AS service
 COPY --from=service-deps /usr/local/bin/node /usr/local/bin/node
 WORKDIR /app
 COPY --from=service-deps /app/node_modules ./node_modules

@@ -18,4 +18,4 @@ Observe orders_queue_depth and orders_queue_oldest_age_seconds. orders.dead cont
 
 ## Rollback and shutdown
 
-`kubectl rollout undo deployment/gateway -n lab` restores its previous revision; use the same for affected apps, including payment in lab-payment. A database schema migration needs separate compatibility review; rolling back an image does not roll back data. `docker compose stop` preserves local volumes. `make k3d-down` removes the named disposable development cluster. No automatic cloud destroy command is run. Review `terraform plan -destroy` before any explicit teardown; it removes runtime data.
+`kubectl rollout undo deployment/gateway -n lab` restores its previous revision; use the same for affected apps, including payment in lab-payment. A database schema migration needs separate compatibility review; rolling back an image does not roll back data. `docker compose stop` preserves local volumes. `make k3d-down` removes the named disposable development cluster. No cloud resources are provisioned. Local volume deletion is destructive and is never part of normal shutdown.

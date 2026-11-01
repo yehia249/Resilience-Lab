@@ -1,0 +1,9 @@
+{
+  "status": "interrupted",
+  "type": "SPIKE_TRAFFIC",
+  "faultId": "e8a47ae6-ddce-44e4-8859-87f3b55d78cf",
+  "attemptLoggedAt": "2026-11-01T16:46:40.193Z",
+  "completedRecordingsBeforeAttempt": 14,
+  "reason": "The recorder timed out waiting for recovery while a concurrent local Compose image build/start overloaded the shared workstation. Kubernetes readiness failures and pod restarts were observed. The extra Compose stack was stopped and the cluster recovered.",
+  "limitations": "This attempt predates interrupted-frame persistence. Its in-memory frames were not saved. No recovery duration is asserted or included in successful-run statistics. The resumed recorder repeats the missing run and retains all completed captures."
+}

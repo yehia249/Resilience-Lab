@@ -269,89 +269,108 @@ for (let round = 0; round < repeats; round++)
         await sleep(1000);
       }
     })();
-    await checkout(await prepareCart(catalog[0].id), checkouts);
-    await sleep(3000);
-    const response = await fetch(base + '/api/chaos', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ type }),
-      signal: AbortSignal.timeout(15000),
-    });
-    if (!response.ok) {
+    try {
+      await checkout(await prepareCart(catalog[0].id), checkouts);
+      await sleep(3000);
+      const response = await fetch(base + '/api/chaos', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ type }),
+        signal: AbortSignal.timeout(15000),
+      });
+      if (!response.ok) {
+        collecting = false;
+        await collector;
+        throw Error(`${type}: injection ${response.status}: ${await response.text()}`);
+      }
+      const injected = Fault.parse(((await response.json()) as { active: unknown }).active);
+      console.log(`${type}: injected real fault ${injected.id}`);
+      if (type === 'KILL_PAYMENT') await Promise.all(prepared.map((id) => checkout(id, checkouts)));
+      else {
+        await sleep(2000);
+        await checkout(await prepareCart(catalog[0].id), checkouts);
+      }
+      let recovered: Snapshot['recoveries'][number] | undefined;
+      await until(async () => {
+        const s = await getSnapshot();
+        recovered = s.recoveries.find(
+          (r) => r.fault_type === type && Date.parse(r.created_at) >= injected.startedAt,
+        );
+        return !!recovered;
+      }, 360000);
+      if (!recovered) throw Error('No real recovery record');
+      await checkout(await prepareCart(catalog[0].id), checkouts);
+      await sleep(2000);
       collecting = false;
       await collector;
-      throw Error(`${type}: injection ${response.status}: ${await response.text()}`);
-    }
-    const injected = Fault.parse(((await response.json()) as { active: unknown }).active);
-    console.log(`${type}: injected real fault ${injected.id}`);
-    if (type === 'KILL_PAYMENT') await Promise.all(prepared.map((id) => checkout(id, checkouts)));
-    else {
-      await sleep(2000);
-      await checkout(await prepareCart(catalog[0].id), checkouts);
-    }
-    let recovered: Snapshot['recoveries'][number] | undefined;
-    await until(async () => {
-      const s = await getSnapshot();
-      recovered = s.recoveries.find(
-        (r) => r.fault_type === type && Date.parse(r.created_at) >= injected.startedAt,
+      const traces = await readTraces(
+        checkouts.map((c) => c.traceId).filter((id): id is string => !!id),
       );
-      return !!recovered;
-    }, 360000);
-    if (!recovered) throw Error('No real recovery record');
-    await checkout(await prepareCart(catalog[0].id), checkouts);
-    await sleep(2000);
-    collecting = false;
-    await collector;
-    const traces = await readTraces(
-      checkouts.map((c) => c.traceId).filter((id): id is string => !!id),
-    );
-    const id = `${type.toLowerCase()}-${String(round + 1).padStart(2, '0')}`;
-    const rps = frames.map((f) => f.metrics.rps).filter((n): n is number => n !== null);
-    if (!rps.length) throw Error('No measured traffic');
-    const capture = Recording.parse({
-      version: 1,
-      id,
-      type,
-      environment: 'k3d',
-      capturedAt: new Date(injected.startedAt).toISOString(),
-      source: 'real-local-system',
-      faultStartedAt: injected.startedAt,
-      recoverySeconds: recovered.duration,
-      peakP95: recovered.peak_p95,
-      peakErrorRate: recovered.peak_error_rate,
-      baselineRps: baseline.metrics.rps,
-      maxRps: Math.max(...rps),
-      runtime: {
-        imageDigest,
-        recorderRevision,
-        nodeVersion,
+      const id = `${type.toLowerCase()}-${String(round + 1).padStart(2, '0')}`;
+      const rps = frames.map((f) => f.metrics.rps).filter((n): n is number => n !== null);
+      if (!rps.length) throw Error('No measured traffic');
+      const capture = Recording.parse({
+        version: 1,
+        id,
+        type,
+        environment: 'k3d',
+        capturedAt: new Date(injected.startedAt).toISOString(),
+        source: 'real-local-system',
+        faultStartedAt: injected.startedAt,
+        recoverySeconds: recovered.duration,
+        peakP95: recovered.peak_p95,
+        peakErrorRate: recovered.peak_error_rate,
+        baselineRps: baseline.metrics.rps,
+        maxRps: Math.max(...rps),
+        runtime: {
+          imageDigest,
+          recorderRevision,
+          nodeVersion,
+          notes:
+            'Existing local k3d runtime; per-visitor quota reset only in the privileged local test fixture. Normal fault TTL and cooldown retained. Waterfall frames are measured checkout timings; traces contain only allowlisted normalized spans from Jaeger.',
+        },
+        products: catalog,
+        frames,
+        checkouts,
+        traces,
+        collectionErrors,
+      });
+      await atomic(`${publicRoot}/recordings/${id}.json`, capture);
+      await atomic(`docs/benchmarks/recordings/${id}.json`, capture);
+      const summary: RecordingSummary = {
+        id,
+        type,
+        environment: 'k3d',
+        capturedAt: capture.capturedAt,
+        recoverySeconds: capture.recoverySeconds,
+        peakP95: capture.peakP95,
+        peakErrorRate: capture.peakErrorRate,
+        baselineRps: capture.baselineRps,
+        maxRps: capture.maxRps,
+        file: `recordings/${id}.json`,
+      };
+      index.runs.push(summary);
+      await publishMetadata();
+      console.log(
+        `SAVED ${id}: recovery ${capture.recoverySeconds.toFixed(3)} s; ${frames.length} real frames; ${traces.length} OTel traces; ${index.runs.length}/${index.expectedRuns}`,
+      );
+    } catch (error) {
+      await mkdir('docs/benchmarks/interrupted', { recursive: true });
+      await atomic(`docs/benchmarks/interrupted/${type.toLowerCase()}-${Date.now()}.json`, {
+        status: 'interrupted',
+        type,
+        observedAt: new Date().toISOString(),
+        error: (error as Error).message,
+        frames,
+        checkouts,
+        collectionErrors,
         notes:
-          'Existing local k3d runtime; per-visitor quota reset only in the privileged local test fixture. Normal fault TTL and cooldown retained. Waterfall frames are measured checkout timings; traces contain only allowlisted normalized spans from Jaeger.',
-      },
-      products: catalog,
-      frames,
-      checkouts,
-      traces,
-      collectionErrors,
-    });
-    await atomic(`${publicRoot}/recordings/${id}.json`, capture);
-    await atomic(`docs/benchmarks/recordings/${id}.json`, capture);
-    const summary: RecordingSummary = {
-      id,
-      type,
-      environment: 'k3d',
-      capturedAt: capture.capturedAt,
-      recoverySeconds: capture.recoverySeconds,
-      peakP95: capture.peakP95,
-      peakErrorRate: capture.peakErrorRate,
-      baselineRps: capture.baselineRps,
-      maxRps: capture.maxRps,
-      file: `recordings/${id}.json`,
-    };
-    index.runs.push(summary);
-    await publishMetadata();
-    console.log(
-      `SAVED ${id}: recovery ${capture.recoverySeconds.toFixed(3)} s; ${frames.length} real frames; ${traces.length} OTel traces; ${index.runs.length}/${index.expectedRuns}`,
-    );
+          'Incomplete attempt, excluded from successful recovery statistics. Actual collected data is preserved without filling gaps.',
+      });
+      throw error;
+    } finally {
+      collecting = false;
+      await collector;
+    }
   }
 console.log('All required recordings complete.');

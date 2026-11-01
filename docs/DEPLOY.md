@@ -13,7 +13,7 @@ wsl -d ResilienceLab --cd 'F:\resilience lab' -- sh scripts/docker-daemon.sh
 In another terminal:
 
 ```powershell
-wsl -d ResilienceLab --cd 'F:\resilience lab' -- sh scripts/start-local.sh
+powershell -ExecutionPolicy Bypass -File scripts/start-local.ps1
 ```
 
 Open http://localhost:8088 for Live Compose. Generated .env stays ignored. For Kubernetes run bash scripts/k3d-up.sh in the same WSL distribution and open http://localhost:8089. Avoid restarting the cluster during recording.
