@@ -1,12 +1,19 @@
 import Redis from 'ioredis';
 import pg from 'pg';
-import { context, propagation, trace, SpanStatusCode } from '@opentelemetry/api';
+import {
+  context,
+  propagation,
+  trace,
+  SpanStatusCode,
+  SpanKind,
+  ROOT_CONTEXT,
+} from '@opentelemetry/api';
 import { Registry, Histogram, Counter, Gauge, collectDefaultMetrics } from 'prom-client';
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
-import { randomUUID,createHmac } from 'node:crypto';
+import { randomUUID, createHmac } from 'node:crypto';
 import { Bulkhead, retry, sleep } from '../../../packages/common/src/resilience';
 import type { LabEvent } from '../../../packages/common/src/schemas';
 export const service = process.env.SERVICE ?? 'gateway';
@@ -179,7 +186,8 @@ export async function server(port: number) {
     requestTimeout: 10000,
     genReqId: () => randomUUID(),
     disableRequestLogging: true,
-    trustProxy: process.env.TRUST_PROXY === 'true' ? (_address: string, hop: number) => hop < 1 : false,
+    trustProxy:
+      process.env.TRUST_PROXY === 'true' ? (_address: string, hop: number) => hop < 1 : false,
   });
   await app.register(cors, {
     origin: process.env.SITE_ORIGIN ?? 'http://localhost:5173',
@@ -191,9 +199,46 @@ export async function server(port: number) {
     max: service === 'gateway' ? 10000 : 15000,
     timeWindow: 60000,
     redis,
-    keyGenerator: req => createHmac('sha256',process.env.IP_HASH_SECRET??'local-only').update(`${Math.floor(Date.now()/86400000)}:${req.ip}`).digest('hex'),
+    keyGenerator: (req) =>
+      createHmac('sha256', process.env.IP_HASH_SECRET ?? 'local-only')
+        .update(`${Math.floor(Date.now() / 86400000)}:${req.ip}`)
+        .digest('hex'),
   });
   const started = new WeakMap<object, number>();
+  const requestTraceIds = new WeakMap<object, string>();
+  app.addHook('onRoute', (options) => {
+    if (['/metrics', '/healthz', '/readyz'].includes(options.url)) return;
+    const handler = options.handler;
+    options.handler = function (request, reply) {
+      const parent = propagation.extract(ROOT_CONTEXT, request.headers);
+      return context.with(parent, () =>
+        trace
+          .getTracer(service)
+          .startActiveSpan(
+            `${request.method} ${options.url}`,
+            {
+              kind: SpanKind.SERVER,
+              attributes: { 'http.request.method': request.method, 'http.route': options.url },
+            },
+            async (span) => {
+              requestTraceIds.set(request, span.spanContext().traceId);
+              reply.header('x-trace-id', span.spanContext().traceId);
+              try {
+                const result = await handler.call(this, request, reply);
+                if (reply.statusCode >= 500) span.setStatus({ code: SpanStatusCode.ERROR });
+                return result;
+              } catch (error) {
+                span.setStatus({ code: SpanStatusCode.ERROR });
+                if (error instanceof Error) span.recordException(error);
+                throw error;
+              } finally {
+                span.end();
+              }
+            },
+          ),
+      );
+    };
+  });
   app.addHook('onRequest', async (req, reply) => {
     started.set(req, performance.now());
     reply.header('x-trace-id', trace.getSpan(context.active())?.spanContext().traceId ?? req.id);
@@ -206,7 +251,8 @@ export async function server(port: number) {
       );
       app.log.info(
         {
-          traceId: trace.getSpan(context.active())?.spanContext().traceId,
+          traceId:
+            requestTraceIds.get(req) ?? trace.getSpan(context.active())?.spanContext().traceId,
           route: req.routeOptions.url,
           status: reply.statusCode,
         },
@@ -220,12 +266,12 @@ export async function server(port: number) {
       .code(e.name === 'ZodError' ? 400 : (e.statusCode ?? 503))
       .send({ error: e.name === 'ZodError' ? 'Invalid request' : e.message });
   });
-  app.get('/healthz', {config:{rateLimit:false}}, () => ({ status: 'ok', service }));
-  app.get('/readyz', {config:{rateLimit:false}}, async () => {
+  app.get('/healthz', { config: { rateLimit: false } }, () => ({ status: 'ok', service }));
+  app.get('/readyz', { config: { rateLimit: false } }, async () => {
     await Promise.all([redis.ping(), db.query('SELECT 1')]);
     return { status: 'ready' };
   });
-  app.get('/metrics', {config:{rateLimit:false}}, async (_req, reply) => {
+  app.get('/metrics', { config: { rateLimit: false } }, async (_req, reply) => {
     reply.type(registry.contentType);
     return registry.metrics();
   });
