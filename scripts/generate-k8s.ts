@@ -130,19 +130,31 @@ function deployment(name: string, image: string, port: number, o: DeploymentOpti
                 ],
                 command: o.command,
                 args: o.args,
-                readinessProbe: o.probe ?? {
-                  httpGet: { path: '/readyz', port },
-                  initialDelaySeconds: 5,
+                readinessProbe: {
+                  ...(o.probe ?? {
+                    httpGet: { path: '/readyz', port },
+                    initialDelaySeconds: 5,
+                    periodSeconds: 5,
+                  }),
+                  timeoutSeconds: 3,
+                },
+                livenessProbe: {
+                  ...(o.probe ?? {
+                    httpGet: { path: '/healthz', port },
+                    initialDelaySeconds: 25,
+                    periodSeconds: 10,
+                  }),
+                  timeoutSeconds: 3,
+                  failureThreshold: 6,
+                },
+                startupProbe: {
+                  ...(o.probe ?? {
+                    httpGet: { path: '/healthz', port },
+                  }),
+                  failureThreshold: 60,
                   periodSeconds: 5,
+                  timeoutSeconds: 3,
                 },
-                livenessProbe: o.probe ?? {
-                  httpGet: { path: '/healthz', port },
-                  initialDelaySeconds: 25,
-                  periodSeconds: 10,
-                },
-                startupProbe: {...(o.probe ?? {
-                  httpGet: { path: '/healthz', port },
-                }),failureThreshold:60,periodSeconds:5,timeoutSeconds:3},
                 volumeMounts: [{ name: 'tmp', mountPath: '/tmp' }, ...(o.volumeMounts ?? [])],
               },
             ],
@@ -253,7 +265,10 @@ deployment('postgres', 'postgres:16.11-alpine', 5432, {
       valueFrom: { secretKeyRef: { name: 'lab-secrets', key: 'POSTGRES_PASSWORD' } },
     },
   ],
-  probe: { exec: { command: ['pg_isready', '-h', '127.0.0.1', '-U', 'lab', '-d', 'lab'] }, periodSeconds: 5 },
+  probe: {
+    exec: { command: ['pg_isready', '-h', '127.0.0.1', '-U', 'lab', '-d', 'lab'] },
+    periodSeconds: 5,
+  },
   volumes: [
     { name: 'data', persistentVolumeClaim: { claimName: 'postgres' } },
     { name: 'init', configMap: { name: 'postgres-init' } },

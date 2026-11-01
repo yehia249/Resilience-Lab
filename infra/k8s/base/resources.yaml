@@ -205,12 +205,15 @@ spec:
               port: 8080
             initialDelaySeconds: 5
             periodSeconds: 5
+            timeoutSeconds: 3
           livenessProbe:
             httpGet:
               path: /healthz
               port: 8080
             initialDelaySeconds: 25
             periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 6
           startupProbe:
             httpGet:
               path: /healthz
@@ -312,12 +315,15 @@ spec:
               port: 8081
             initialDelaySeconds: 5
             periodSeconds: 5
+            timeoutSeconds: 3
           livenessProbe:
             httpGet:
               path: /healthz
               port: 8081
             initialDelaySeconds: 25
             periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 6
           startupProbe:
             httpGet:
               path: /healthz
@@ -419,12 +425,15 @@ spec:
               port: 8082
             initialDelaySeconds: 5
             periodSeconds: 5
+            timeoutSeconds: 3
           livenessProbe:
             httpGet:
               path: /healthz
               port: 8082
             initialDelaySeconds: 25
             periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 6
           startupProbe:
             httpGet:
               path: /healthz
@@ -526,12 +535,15 @@ spec:
               port: 8083
             initialDelaySeconds: 5
             periodSeconds: 5
+            timeoutSeconds: 3
           livenessProbe:
             httpGet:
               path: /healthz
               port: 8083
             initialDelaySeconds: 25
             periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 6
           startupProbe:
             httpGet:
               path: /healthz
@@ -633,12 +645,15 @@ spec:
               port: 8084
             initialDelaySeconds: 5
             periodSeconds: 5
+            timeoutSeconds: 3
           livenessProbe:
             httpGet:
               path: /healthz
               port: 8084
             initialDelaySeconds: 25
             periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 6
           startupProbe:
             httpGet:
               path: /healthz
@@ -740,12 +755,15 @@ spec:
               port: 8090
             initialDelaySeconds: 5
             periodSeconds: 5
+            timeoutSeconds: 3
           livenessProbe:
             httpGet:
               path: /healthz
               port: 8090
             initialDelaySeconds: 25
             periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 6
           startupProbe:
             httpGet:
               path: /healthz
@@ -847,12 +865,15 @@ spec:
               port: 8091
             initialDelaySeconds: 5
             periodSeconds: 5
+            timeoutSeconds: 3
           livenessProbe:
             httpGet:
               path: /healthz
               port: 8091
             initialDelaySeconds: 25
             periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 6
           startupProbe:
             httpGet:
               path: /healthz
@@ -955,12 +976,15 @@ spec:
               port: 8095
             initialDelaySeconds: 5
             periodSeconds: 5
+            timeoutSeconds: 3
           livenessProbe:
             httpGet:
               path: /healthz
               port: 8095
             initialDelaySeconds: 25
             periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 6
           startupProbe:
             httpGet:
               path: /healthz
@@ -1235,8 +1259,8 @@ spec:
                 secretKeyRef:
                   name: lab-secrets
                   key: POSTGRES_PASSWORD
-          readinessProbe: &a1
-            exec: &a2
+          readinessProbe:
+            exec: &a1
               command:
                 - pg_isready
                 - -h
@@ -1246,9 +1270,14 @@ spec:
                 - -d
                 - lab
             periodSeconds: 5
-          livenessProbe: *a1
+            timeoutSeconds: 3
+          livenessProbe:
+            exec: *a1
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 6
           startupProbe:
-            exec: *a2
+            exec: *a1
             periodSeconds: 5
             failureThreshold: 60
             timeoutSeconds: 3
@@ -1341,15 +1370,20 @@ spec:
             - 80mb
             - --maxmemory-policy
             - noeviction
-          readinessProbe: &a1
-            exec: &a2
+          readinessProbe:
+            exec: &a1
               command:
                 - redis-cli
                 - ping
             periodSeconds: 5
-          livenessProbe: *a1
+            timeoutSeconds: 3
+          livenessProbe:
+            exec: *a1
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 6
           startupProbe:
-            exec: *a2
+            exec: *a1
             periodSeconds: 5
             failureThreshold: 60
             timeoutSeconds: 3
@@ -1432,14 +1466,19 @@ spec:
             - --config.file=/etc/prometheus/prometheus.yml
             - --storage.tsdb.retention.time=6h
             - --storage.tsdb.retention.size=2GB
-          readinessProbe: &a1
-            httpGet: &a2
+          readinessProbe:
+            httpGet: &a1
               path: /-/ready
               port: 9090
             periodSeconds: 5
-          livenessProbe: *a1
+            timeoutSeconds: 3
+          livenessProbe:
+            httpGet: *a1
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 6
           startupProbe:
-            httpGet: *a2
+            httpGet: *a1
             periodSeconds: 5
             failureThreshold: 60
             timeoutSeconds: 3
@@ -1525,14 +1564,19 @@ spec:
               value: "true"
             - name: MEMORY_MAX_TRACES
               value: "20000"
-          readinessProbe: &a1
-            httpGet: &a2
+          readinessProbe:
+            httpGet: &a1
               path: /
               port: 14269
             periodSeconds: 5
-          livenessProbe: *a1
+            timeoutSeconds: 3
+          livenessProbe:
+            httpGet: *a1
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 6
           startupProbe:
-            httpGet: *a2
+            httpGet: *a1
             periodSeconds: 5
             failureThreshold: 60
             timeoutSeconds: 3
@@ -1622,13 +1666,18 @@ spec:
               value: "4318"
           args:
             - --config=/etc/otel/otel.yaml
-          readinessProbe: &a1
-            tcpSocket: &a2
+          readinessProbe:
+            tcpSocket: &a1
               port: 4318
             periodSeconds: 5
-          livenessProbe: *a1
+            timeoutSeconds: 3
+          livenessProbe:
+            tcpSocket: *a1
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 6
           startupProbe:
-            tcpSocket: *a2
+            tcpSocket: *a1
             periodSeconds: 5
             failureThreshold: 60
             timeoutSeconds: 3
@@ -1785,14 +1834,19 @@ spec:
               value: web
             - name: PORT
               value: "8088"
-          readinessProbe: &a1
-            httpGet: &a2
+          readinessProbe:
+            httpGet: &a1
               path: /
               port: 8088
             periodSeconds: 5
-          livenessProbe: *a1
+            timeoutSeconds: 3
+          livenessProbe:
+            httpGet: *a1
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 6
           startupProbe:
-            httpGet: *a2
+            httpGet: *a1
             periodSeconds: 5
             failureThreshold: 60
             timeoutSeconds: 3
@@ -1885,12 +1939,15 @@ spec:
               port: 8099
             initialDelaySeconds: 5
             periodSeconds: 5
+            timeoutSeconds: 3
           livenessProbe:
             httpGet:
               path: /healthz
               port: 8099
             initialDelaySeconds: 25
             periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 6
           startupProbe:
             httpGet:
               path: /healthz

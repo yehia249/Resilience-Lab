@@ -2,6 +2,7 @@ import { Product, Snapshot, Cart, CheckoutResponse } from '../packages/common/sr
 import { randomUUID } from 'node:crypto';
 const base = process.env.BASE_URL ?? 'http://localhost:8088';
 const cartId = randomUUID();
+let checkoutTraceId: string | null = null;
 async function request(path: string, method = 'GET', body?: unknown) {
   const r = await fetch(base + path, {
     method,
@@ -10,6 +11,7 @@ async function request(path: string, method = 'GET', body?: unknown) {
     signal: AbortSignal.timeout(10000),
   });
   if (!r.ok) throw Error(`${path}: ${r.status} ${await r.text()}`);
+  if (path === '/api/checkout') checkoutTraceId = r.headers.get('x-trace-id');
   return r.json();
 }
 const products = Product.array().parse(await request('/api/products'));
@@ -47,6 +49,22 @@ while (snapshots < 2) {
   }
 }
 await reader.cancel();
+let traceSpans: number | null = null;
+if (process.env.JAEGER_URL) {
+  for (let attempt = 0; attempt < 20; attempt++) {
+    const r = await fetch(process.env.JAEGER_URL + '/api/traces/' + checkoutTraceId, {
+      signal: AbortSignal.timeout(5000),
+    });
+    const data = (await r.json()) as { data?: { spans?: unknown[] }[] };
+    const count = data.data?.[0]?.spans?.length ?? 0;
+    if (count > 0) {
+      traceSpans = count;
+      break;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+  }
+  if (!traceSpans) throw Error('No actual checkout spans reached Jaeger');
+}
 console.log(
   JSON.stringify(
     {
@@ -56,6 +74,7 @@ console.log(
       checkoutMs: order.latencyMs,
       telemetryTs: snapshot.ts,
       liveSseSnapshots: snapshots,
+      traceSpans,
       measuredAt: new Date().toISOString(),
     },
     null,

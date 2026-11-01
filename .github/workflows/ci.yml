@@ -34,6 +34,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: node scripts/setup-env.mjs && docker compose build gateway web && docker compose up -d --wait --wait-timeout 180
       - run: pnpm smoke
+        env: { JAEGER_URL: 'http://localhost:16686' }
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:e2e
       - name: Integration fault contracts
