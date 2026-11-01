@@ -59,7 +59,7 @@ if (process.env.JAEGER_URL) {
     });
     const data = (await r.json()) as {
       data?: {
-        spans?: { operationName?: string }[];
+        spans?: { operationName?: string; tags?: { key: string; value: unknown }[] }[];
         processes?: Record<string, { serviceName: string }>;
       }[];
     };
@@ -72,6 +72,9 @@ if (process.env.JAEGER_URL) {
       spans: count,
       services,
       operations: [...new Set(data.data?.[0]?.spans?.map((s) => s.operationName) ?? [])],
+      propagation: data.data?.[0]?.spans?.flatMap(
+        (s) => s.tags?.filter((t) => t.key.startsWith('lab.traceparent_')) ?? [],
+      ),
     };
     if (count > 0 && services.includes('gateway') && services.length >= 2) {
       traceSpans = count;
@@ -80,11 +83,35 @@ if (process.env.JAEGER_URL) {
     }
     await new Promise((resolve) => setTimeout(resolve, 1000));
   }
-  if (!traceSpans)
+  if (!traceSpans) {
+    const services = await (await fetch(process.env.JAEGER_URL + '/api/services')).json();
+    const peer = (await (
+      await fetch(process.env.JAEGER_URL + '/api/traces?service=catalog&limit=1')
+    ).json()) as {
+      data?: {
+        traceID: string;
+        processes: Record<string, { serviceName: string }>;
+        spans: { operationName: string; tags?: { key: string; value: unknown }[] }[];
+      }[];
+    };
+    console.log(
+      'Trace diagnostics',
+      JSON.stringify({
+        services,
+        peer: peer.data?.map((t) => ({
+          traceId: t.traceID,
+          services: Object.values(t.processes).map((p) => p.serviceName),
+          propagation: t.spans.flatMap(
+            (s) => s.tags?.filter((v) => v.key.startsWith('lab.traceparent_')) ?? [],
+          ),
+        })),
+      }),
+    );
     throw Error(
       'No distributed checkout trace reached Jaeger across multiple services: ' +
         JSON.stringify(observedTrace),
     );
+  }
 }
 console.log(
   JSON.stringify(

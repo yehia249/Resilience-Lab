@@ -139,6 +139,10 @@ export async function call<T>(
             try {
               const headers: Record<string, string> = { 'content-type': 'application/json' };
               propagation.inject(context.active(), headers);
+              span.setAttribute(
+                'lab.traceparent_injected',
+                typeof headers.traceparent === 'string',
+              );
               if (options.key) headers['idempotency-key'] = options.key;
               const response = await fetch(url + path, {
                 method: options.method ?? 'GET',
@@ -212,30 +216,32 @@ export async function server(port: number) {
     options.handler = function (request, reply) {
       const parent = propagation.extract(ROOT_CONTEXT, request.headers);
       return context.with(parent, () =>
-        trace
-          .getTracer(service)
-          .startActiveSpan(
-            `${request.method} ${options.url}`,
-            {
-              kind: SpanKind.SERVER,
-              attributes: { 'http.request.method': request.method, 'http.route': options.url },
-            },
-            async (span) => {
-              requestTraceIds.set(request, span.spanContext().traceId);
-              reply.header('x-trace-id', span.spanContext().traceId);
-              try {
-                const result = await handler.call(this, request, reply);
-                if (reply.statusCode >= 500) span.setStatus({ code: SpanStatusCode.ERROR });
-                return result;
-              } catch (error) {
-                span.setStatus({ code: SpanStatusCode.ERROR });
-                if (error instanceof Error) span.recordException(error);
-                throw error;
-              } finally {
-                span.end();
-              }
-            },
-          ),
+        trace.getTracer(service).startActiveSpan(
+          `${request.method} ${options.url}`,
+          {
+            kind: SpanKind.SERVER,
+            attributes: { 'http.request.method': request.method, 'http.route': options.url },
+          },
+          async (span) => {
+            requestTraceIds.set(request, span.spanContext().traceId);
+            span.setAttribute(
+              'lab.traceparent_received',
+              typeof request.headers.traceparent === 'string',
+            );
+            reply.header('x-trace-id', span.spanContext().traceId);
+            try {
+              const result = await handler.call(this, request, reply);
+              if (reply.statusCode >= 500) span.setStatus({ code: SpanStatusCode.ERROR });
+              return result;
+            } catch (error) {
+              span.setStatus({ code: SpanStatusCode.ERROR });
+              if (error instanceof Error) span.recordException(error);
+              throw error;
+            } finally {
+              span.end();
+            }
+          },
+        ),
       );
     };
   });
