@@ -87,7 +87,7 @@ services:
     environment: { <<: *env, SERVICE: telemetry-api, PORT: 8095 }
     ports: ['127.0.0.1:8095:8095']
   local-adapter:
-    image: node:20.19.5-alpine
+    image: node:20.20.2-alpine
     command: [node, /adapter/server.mjs]
     user: '0:0'
     environment: { INTERNAL_TOKEN: '${INTERNAL_TOKEN:?Run scripts/setup-env.mjs}' }

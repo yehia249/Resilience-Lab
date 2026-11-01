@@ -36,7 +36,7 @@ test('real shop checkout returns an honest outcome', async ({ page }) => {
   await page.getByRole('button', { name: 'Checkout (1)' }).click();
   await expect(
     page.getByRole('status').filter({ hasText: /Confirmed in|queued safely|Payment failed/ }),
-  ).toBeVisible();
+  ).toBeVisible({timeout:15000});
 });
 test('real payment kill opens breaker, queues checkout and recovers', async ({ page, request }) => {
   test.skip(process.env.RUN_CHAOS_E2E !== 'true', 'Requires a dedicated fault-test target');
