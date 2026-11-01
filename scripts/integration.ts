@@ -17,7 +17,7 @@ function docker(args: string[]) {
   return execFileSync(
     process.platform === 'win32' ? 'wsl' : 'docker',
     process.platform === 'win32'
-      ? ['-d', 'ResilienceLab', '--cd', process.cwd(), '--', 'docker', ...args]
+      ? ['-d', 'ResilienceLab', '--cd', process.cwd(), '--exec', 'docker', ...args]
       : args,
     { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] },
   );
@@ -118,7 +118,7 @@ function sampleTtl(type: FaultType): Promise<number> {
     const child = execFile(
       process.platform === 'win32' ? 'wsl' : 'docker',
       process.platform === 'win32'
-        ? ['-d', 'ResilienceLab', '--cd', process.cwd(), '--', 'docker', ...args]
+        ? ['-d', 'ResilienceLab', '--cd', process.cwd(), '--exec', 'docker', ...args]
         : args,
       { encoding: 'utf8', timeout: 30000 },
       (error, stdout) => (error ? reject(error) : resolve(Number(stdout.trim()))),

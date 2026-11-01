@@ -26,7 +26,7 @@ function local(args: string[], input?: string) {
       return execFileSync(
         process.platform === 'win32' ? 'wsl' : args[0],
         process.platform === 'win32'
-          ? ['-d', 'ResilienceLab', '--cd', process.cwd(), '--', ...args]
+          ? ['-d', 'ResilienceLab', '--cd', process.cwd(), '--exec', ...args]
           : args.slice(1),
         { encoding: 'utf8', input, stdio: ['pipe', 'pipe', 'pipe'], timeout: 30000 },
       ).trim();
