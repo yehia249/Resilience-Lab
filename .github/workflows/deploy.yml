@@ -30,6 +30,6 @@ jobs:
           [[ "$LAB_HOST" =~ ^[a-zA-Z0-9.-]+$ ]]
           ssh "$LAB_SSH" "cd /opt/resilience-lab && git fetch origin && git checkout $REVISION && sudo LAB_HOST=$LAB_HOST LAB_IMAGE_TAG=$REVISION bash scripts/deploy.sh"
           if ! curl --fail --retry 20 --retry-delay 3 "https://$LAB_HOST/api/products"; then
-            ssh "$LAB_SSH" 'sudo kubectl rollout undo deployment -n lab --all; sudo kubectl rollout undo deployment -n lab-payment --all'
+            ssh "$LAB_SSH" 'cd /opt/resilience-lab && sudo bash scripts/rollback.sh'
             exit 1
           fi
