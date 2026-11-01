@@ -123,16 +123,14 @@ redis.call('SET',KEYS[1],ARGV[2],'PX',ARGV[3]);redis.call('INCR',KEYS[3]);if red
       fault.expiresAt - startedAt + 20000,
     );
     if (result !== 0)
-      return reply
-        .code(result === 3 ? 429 : 409)
-        .send({
-          error:
-            result === 1
-              ? 'Another visitor is running a fault'
-              : result === 2
-                ? 'System is cooling down'
-                : 'Three faults per ten minutes; try later',
-        });
+      return reply.code(result === 3 ? 429 : 409).send({
+        error:
+          result === 1
+            ? 'Another visitor is running a fault'
+            : result === 2
+              ? 'System is cooling down'
+              : 'Three faults per ten minutes; try later',
+      });
     try {
       await redis.set(`fault:${type}`, '1', 'PX', fault.expiresAt - startedAt);
       await redis.set('recovery.pending', JSON.stringify(fault), 'EX', 600);
@@ -155,12 +153,12 @@ redis.call('SET',KEYS[1],ARGV[2],'PX',ARGV[3]);redis.call('INCR',KEYS[3]);if red
   });
   async function clear(f: ActiveFault) {
     const cleared = await redis.eval(
-      `if redis.call('GET',KEYS[1])==ARGV[1] then redis.call('DEL',KEYS[1],KEYS[2]);redis.call('SET',KEYS[3],ARGV[2],'PX',15000);return 1 end;return 0`,
+      `local raw=redis.call('GET',KEYS[1]);if raw and cjson.decode(raw).id==ARGV[1] then redis.call('DEL',KEYS[1],KEYS[2]);redis.call('SET',KEYS[3],ARGV[2],'PX',15000);return 1 end;return 0`,
       3,
       'fault.active',
       `fault:${f.type}`,
       'fault.cooldown',
-      JSON.stringify(f),
+      f.id,
       Date.now() + 15000,
     );
     if (cleared) {

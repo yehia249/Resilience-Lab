@@ -502,7 +502,11 @@ function App() {
                 </div>
                 <div className="service-map">
                   {(
-                    snapshot?.services ??
+                    snapshot?.services.filter((s) =>
+                      ['gateway', 'catalog', 'cart', 'payment', 'postgres', 'redis'].includes(
+                        s.name,
+                      ),
+                    ) ??
                     ['gateway', 'catalog', 'cart', 'payment', 'postgres', 'redis'].map((name) => ({
                       name,
                       ready: null,

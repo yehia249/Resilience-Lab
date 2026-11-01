@@ -53,7 +53,22 @@ http
       if (req.url === '/topology' && req.method === 'GET') {
         const list = await containers();
         const result = await Promise.all(
-          ['gateway', 'catalog', 'cart', 'payment', 'postgres', 'redis'].map(async (name) => {
+          [
+            'gateway',
+            'catalog',
+            'cart',
+            'payment',
+            'postgres',
+            'redis',
+            'order-worker',
+            'chaos-controller',
+            'traffic-generator',
+            'telemetry-api',
+            'otel-collector',
+            'prometheus',
+            'jaeger',
+            'web',
+          ].map(async (name) => {
             const matches = list.filter((c) => c.Labels['com.docker.compose.service'] === name);
             let ready = 0;
             for (const c of matches) {

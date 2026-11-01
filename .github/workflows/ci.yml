@@ -42,7 +42,12 @@ jobs:
         run: docker compose logs --tail 100 > compose.log
       - uses: actions/upload-artifact@v4
         if: always()
-        with: {name: integration-results, path: 'test-results/\ncompose.log', retention-days: 7}
+        with:
+          name: integration-results
+          path: |
+            test-results/
+            compose.log
+          retention-days: 7
   cluster:
     needs: integration
     runs-on: ubuntu-latest

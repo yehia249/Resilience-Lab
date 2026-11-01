@@ -9,7 +9,22 @@ import {
   type ActiveFault,
 } from '../../../packages/common/src/schemas';
 import { RecoveryDetector } from '../../../packages/common/src/resilience';
-const names = ['gateway', 'catalog', 'cart', 'payment', 'postgres', 'redis'];
+const names = [
+  'gateway',
+  'catalog',
+  'cart',
+  'payment',
+  'postgres',
+  'redis',
+  'order-worker',
+  'chaos-controller',
+  'traffic-generator',
+  'telemetry-api',
+  'otel-collector',
+  'prometheus',
+  'jaeger',
+  'web',
+];
 type Vector = { metric: Record<string, string>; value: [number, string] };
 async function query(q: string) {
   try {
@@ -38,10 +53,19 @@ async function topology() {
           status: { readyReplicas?: number };
         }[];
       };
-      const paymentData = await kube('/apis/apps/v1/namespaces/lab-payment/deployments') as typeof labData;
-      const data = {items:[...labData.items,...paymentData.items]};
-      type PodUsage = {items:{metadata:{name:string};containers:{usage:{cpu:string;memory:string}}[]}[]};
-      const paymentMetrics = await kube('/apis/metrics.k8s.io/v1beta1/namespaces/lab-payment/pods').catch(()=>null) as PodUsage|null;
+      const paymentData = (await kube(
+        '/apis/apps/v1/namespaces/lab-payment/deployments',
+      )) as typeof labData;
+      const data = { items: [...labData.items, ...paymentData.items] };
+      type PodUsage = {
+        items: {
+          metadata: { name: string };
+          containers: { usage: { cpu: string; memory: string } }[];
+        }[];
+      };
+      const paymentMetrics = (await kube(
+        '/apis/metrics.k8s.io/v1beta1/namespaces/lab-payment/pods',
+      ).catch(() => null)) as PodUsage | null;
       const labMetrics = (await kube('/apis/metrics.k8s.io/v1beta1/namespaces/lab/pods').catch(
         () => null,
       )) as {
@@ -50,7 +74,9 @@ async function topology() {
           containers: { usage: { cpu: string; memory: string } }[];
         }[];
       } | null;
-      const metrics = labMetrics ? {items:[...labMetrics.items,...(paymentMetrics?.items??[])]} : null;
+      const metrics = labMetrics
+        ? { items: [...labMetrics.items, ...(paymentMetrics?.items ?? [])] }
+        : null;
       const units = (s: string) =>
         s.endsWith('n')
           ? Number(s.slice(0, -1)) / 1e9
