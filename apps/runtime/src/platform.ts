@@ -220,12 +220,12 @@ export async function server(port: number) {
       .code(e.name === 'ZodError' ? 400 : (e.statusCode ?? 503))
       .send({ error: e.name === 'ZodError' ? 'Invalid request' : e.message });
   });
-  app.get('/healthz', () => ({ status: 'ok', service }));
-  app.get('/readyz', async () => {
+  app.get('/healthz', {config:{rateLimit:false}}, () => ({ status: 'ok', service }));
+  app.get('/readyz', {config:{rateLimit:false}}, async () => {
     await Promise.all([redis.ping(), db.query('SELECT 1')]);
     return { status: 'ready' };
   });
-  app.get('/metrics', async (_req, reply) => {
+  app.get('/metrics', {config:{rateLimit:false}}, async (_req, reply) => {
     reply.type(registry.contentType);
     return registry.metrics();
   });

@@ -55,7 +55,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: docker build --target ${{ matrix.target }} -t lab-scan:${{ matrix.target }} .
-      - uses: aquasecurity/trivy-action@0.33.1
+      - uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with: {image-ref: 'lab-scan:${{ matrix.target }}', severity: 'CRITICAL,HIGH', exit-code: '1', ignore-unfixed: true}
   cluster:
     needs: integration
@@ -97,5 +97,5 @@ jobs:
           push: true
           tags: ghcr.io/yehia249/resilience-lab-${{ matrix.target }}:${{ github.sha }},ghcr.io/yehia249/resilience-lab-${{ matrix.target }}:main
           labels: org.opencontainers.image.source=https://github.com/yehia249/Resilience-Lab
-      - uses: aquasecurity/trivy-action@0.33.1
+      - uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with: {image-ref: 'ghcr.io/yehia249/resilience-lab-${{ matrix.target }}:${{ github.sha }}', severity: 'CRITICAL,HIGH', exit-code: '1', ignore-unfixed: true}

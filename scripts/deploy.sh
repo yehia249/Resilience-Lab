@@ -30,7 +30,7 @@ done
 if [[ "$overlay" == prod ]]; then
  kubectl annotate ingress web -n lab traefik.ingress.kubernetes.io/router.entrypoints=websecure traefik.ingress.kubernetes.io/router.tls=true traefik.ingress.kubernetes.io/router.tls.certresolver=lab --overwrite
 fi
-if ! kubectl rollout status deployment -n lab --timeout=300s || ! kubectl rollout status deployment -n lab-payment --timeout=300s; then
+if ! kubectl rollout status deployment -n lab --timeout="${ROLLOUT_TIMEOUT:-600s}" || ! kubectl rollout status deployment -n lab-payment --timeout="${ROLLOUT_TIMEOUT:-600s}"; then
  echo 'Rollout failed; restoring previous application deployment revisions'; for ns in lab lab-payment; do kubectl rollout undo deployment -n "$ns" --all || true; done; exit 1
 fi
 echo "Deployed manifests for $LAB_HOST; run make smoke with BASE_URL to verify public routing."
