@@ -22,6 +22,31 @@ if (!['confirmed', 'failed', 'queued'].includes(order.status)) throw Error('Inva
 const duplicate = CheckoutResponse.parse(await request('/api/checkout', 'POST', { cartId }));
 if (duplicate.orderId !== order.orderId) throw Error('Checkout idempotency failed');
 const snapshot = Snapshot.parse(await request('/v1/snapshot'));
+const stream = await fetch(base + '/v1/stream', { signal: AbortSignal.timeout(10000) });
+if (!stream.ok || !stream.body) throw Error('SSE stream unavailable');
+const reader = stream.body.getReader();
+let snapshots = 0;
+let streamBuffer = '';
+const decoder = new TextDecoder();
+let previousTs = 0;
+while (snapshots < 2) {
+  const chunk = await reader.read();
+  if (chunk.done) throw Error('SSE closed early');
+  streamBuffer += decoder.decode(chunk.value, { stream: true });
+  let boundary: number;
+  while ((boundary = streamBuffer.indexOf('\n\n')) !== -1) {
+    const event = streamBuffer.slice(0, boundary);
+    streamBuffer = streamBuffer.slice(boundary + 2);
+    if (event.startsWith('event: snapshot\n')) {
+      const s = Snapshot.parse(JSON.parse(event.slice(event.indexOf('data: ') + 6)));
+      if (s.ts > previousTs) {
+        snapshots++;
+        previousTs = s.ts;
+      }
+    }
+  }
+}
+await reader.cancel();
 console.log(
   JSON.stringify(
     {
@@ -30,6 +55,7 @@ console.log(
       orderStatus: order.status,
       checkoutMs: order.latencyMs,
       telemetryTs: snapshot.ts,
+      liveSseSnapshots: snapshots,
       measuredAt: new Date().toISOString(),
     },
     null,

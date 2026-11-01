@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import {
+  Cart as CartSchema,
   Snapshot as SnapshotSchema,
   Product as ProductSchema,
   CheckoutResponse,
@@ -186,6 +187,20 @@ function App() {
     };
   }, []);
   useEffect(() => {
+    if (!connected) return;
+    let active = true;
+    void api('/api/cart')
+      .then((data) => {
+        const current = CartSchema.parse(data);
+        if (active)
+          setCart(Object.fromEntries(current.items.map((i) => [i.productId, i.quantity])));
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [connected]);
+  useEffect(() => {
     let source: EventSource | null = null;
     let timer: ReturnType<typeof setTimeout>;
     let stopped = false;
@@ -292,8 +307,8 @@ function App() {
       );
       if (r.status !== 'failed') {
         setCart({});
-        checkoutKey.current = crypto.randomUUID();
       }
+      checkoutKey.current = crypto.randomUUID();
     } catch (e) {
       setMessage((e as Error).message + ' · You can retry safely.');
     } finally {
@@ -525,6 +540,7 @@ function App() {
                       <span className="service-latency">{format(s.p95, ' ms')}</span>
                       <div
                         className="dots"
+                        role="img"
                         aria-label={`${s.ready ?? 'unknown'} of ${s.desired ?? 'unknown'} instances ready`}
                       >
                         {s.desired === null ? (
