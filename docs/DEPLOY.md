@@ -1,25 +1,33 @@
-# Deployment
+# Local runtime and GitHub Pages
 
-No cloud deployment is claimed until STATUS.md records a verified public URL. The user currently has no Oracle account or spare host. See HUMAN_ACTIONS.md for the smallest personal steps. No paid alternative is provisioned automatically.
+The backend runs locally only. Public visitors use static replay of recorded local experiments. No cloud credentials, infrastructure approvals or signups are required.
 
-## Local
+## This workstation
 
-Requirements: Node 20.19+ (workstation Node 22 is also supported), pnpm 10.20, Docker Engine with Compose, kubectl and k3d for cluster verification. `pnpm install --frozen-lockfile`, `make dev`, `make smoke`, `pnpm test:e2e`. `make k3d-up` creates only the disposable resilience-lab local cluster, imports locally built images and deploys the local overlay at http://localhost:8089.
+The isolated ResilienceLab WSL distribution contains Docker, Compose, kubectl and k3d. Keep the task-owned daemon running:
 
-## OCI preparation and approval
+```powershell
+wsl -d ResilienceLab --cd 'F:\resilience lab' -- sh scripts/docker-daemon.sh
+```
 
-OCI API configuration is read from ~/.oci/config using profile RESILIENCE_LAB. Keep the private API key in ~/.oci with owner-only permissions; never put its content into the chat or Git repository. Copy infra/terraform/terraform.tfvars.example to ignored terraform.tfvars and provide tenancy, home region, availability domain, Ubuntu ARM image ID, SSH public key and current IPv4 /32. Confirm there are no other A1 resources using the allowance and the image/shape are Always Free eligible. Only then set free_tier_reviewed=true.
+In another terminal:
 
-Run `bash scripts/provision.sh plan`. This lists the actual resources and saves an ignored plan. Expected: one compartment, VCN, internet gateway, route table, security list, subnet and 2-OCPU/12-GB A1 VM with a 50-GB boot disk and ephemeral public IP. No apply occurs during planning. Review the entire plan and cost constraints. `bash scripts/provision.sh apply` requires typing APPLY and applies only that saved plan. Plan review and first apply approval are explicitly required by the user brief.
+```powershell
+wsl -d ResilienceLab --cd 'F:\resilience lab' -- sh scripts/start-local.sh
+```
 
-## Deploy reviewed images
+Open http://localhost:8088 for Live Compose. Generated .env stays ignored. For Kubernetes run bash scripts/k3d-up.sh in the same WSL distribution and open http://localhost:8089. Avoid restarting the cluster during recording.
 
-The VM installs k3s and clones the public repo. CI must pass and publish public GHCR images for the exact commit SHA. If GHCR packages are private on first publication, set package visibility to public; no registry token is put into the VM. Create the production GitHub environment with required reviewers. Configure environment vars LAB_SSH (ubuntu@IP), LAB_HOST (IP.sslip.io), and secrets SSH_KEY, SSH_KNOWN_HOSTS (verify the host fingerprint independently before adding it). Never use ssh-keyscan without checking its result.
+## Public frontend
 
-The VM needs Node and Python for the deploy helper, generated ignored .env, and kubectl access (sudo k3s kubectl). Cloud-init prepares OS/cluster; the deploy workflow runs `sudo LAB_HOST=... LAB_IMAGE_TAG=<full-green-SHA> bash scripts/deploy.sh`. The helper creates secrets without printing values, applies Kustomize, sets the free hostname, requests Traefik ACME TLS and waits for readiness. Configure a real ACME contact email in Traefik's HelmChartConfig before requesting production certificates. Then dispatch deploy.yml with the green SHA and approve the production environment. Smoke verifies the public API and failure triggers application rollback.
+.github/workflows/pages.yml builds with VITE_LAB_MODE=replay and /Resilience-Lab/ as its base. It validates recordings, runs browser tests, uploads only apps/web/dist and deploys through GitHub Pages. No backend or secret is exposed.
 
-Cloudflare Pages is optional: the complete frontend can be served from the VM by default. Separate-origin Pages would require VITE_API_URL at build time plus matching SITE_ORIGIN/CSP; that path is not claimed as tested. No card or paid account is necessary for the VM-hosted frontend.
+Push reviewed code and recordings to main. The feature branch is also enabled during initial delivery. The workflow publishes https://yehia249.github.io/Resilience-Lab/. Workflow success and an HTTP check establish publication; a configured URL alone is not deployment evidence.
 
-## Verification gates
+Engineering uses a hash route. The public Live control opens the local Compose address. Live use requires starting the local backend.
 
-Run smoke, dedicated chaos E2E, k6 baseline/spike/soak, benchmark runner and Lighthouse against the real target. Publish only real outputs. The benchmark runner preserves the public three-faults-per-ten-minutes rule, so forty runs take substantial time. Integration fixtures reset quotas only inside an isolated localhost Compose target; production benchmark runs do not. A recording still requires the owner's personal action.
+## Evidence
+
+Forward Jaeger with kubectl port-forward -n lab service/jaeger 16687:16686, then make record. The recorder resumes its index, validates the local cluster, captures actual ordered snapshots and normalized OpenTelemetry traces, and writes both evidence and public assets. REQUIRE_FULL_RECORDINGS=true pnpm exec tsx scripts/validate-recordings.ts requires ten runs per fault.
+
+Recorder revision identifies the capture tool; runtime image digest separately identifies the running service. One-second sampling can miss a short payment fault slot; its accepted response and actual error traces remain evidence. No artificial sample is inserted. Local fixture quota resets do not change the public three-faults-per-ten-minutes limit.

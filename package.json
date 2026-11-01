@@ -15,7 +15,8 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "smoke": "tsx scripts/smoke.ts",
-    "bench": "tsx scripts/benchmark.ts",
+    "bench": "tsx scripts/record.ts",
+    "record": "tsx scripts/record.ts",
     "start:service": "tsx apps/runtime/src/main.ts",
     "test:e2e": "playwright test",
     "infra:generate": "tsx scripts/generate-k8s.ts"

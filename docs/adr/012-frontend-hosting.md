@@ -1,15 +1,7 @@
-# ADR 012: Serve the frontend on the VM by default
+# ADR 012: GitHub Pages with recorded replay
 
-Status: accepted for implementation; verification is tracked in STATUS.md.
+Status: accepted; supersedes VM hosting.
 
-## Decision
+Pages hosts the static React frontend. Replay is the public default and loads actual captured JSON. Fault buttons select matching recordings; capture date and replay status remain visible. Checkout shows a captured outcome rather than pretending to submit an order.
 
-Use Nginx and Traefik to serve the frontend and same-origin API on a free hostname.
-
-## Reason
-
-The user has no Cloudflare account. The brief explicitly permits VM frontend fallback, so this avoids an extra personal signup.
-
-## Consequences
-
-Independent Pages hosting is documented but not claimed as tested. A VM outage also makes the VM-hosted UI unreachable; a separate static host would improve that boundary.
+Live mode connects to the local backend. Pages contains no secrets or external backend dependency. Hash routing and the repository base path support reloads. A browser test checks fault selection, accessibility and absence of backend requests in replay.

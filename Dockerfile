@@ -8,6 +8,7 @@ COPY apps/local-adapter/package.json apps/local-adapter/package.json
 COPY packages/common/package.json packages/common/package.json
 RUN pnpm install --frozen-lockfile
 COPY . .
+ENV VITE_LAB_MODE=live
 RUN pnpm build
 RUN pnpm exec esbuild apps/runtime/src/main.ts --bundle --platform=node --packages=external --format=esm --outfile=server.mjs && pnpm exec esbuild apps/runtime/src/otel.ts --bundle --platform=node --packages=external --format=esm --outfile=otel.mjs
 
@@ -21,15 +22,16 @@ COPY apps/local-adapter/package.json apps/local-adapter/package.json
 COPY packages/common/package.json packages/common/package.json
 RUN pnpm install --prod --frozen-lockfile --ignore-scripts
 
-FROM node:20.20.2-bookworm-slim AS service
-RUN apt-get update && apt-get upgrade -y --no-install-recommends && rm -rf /var/lib/apt/lists/* /usr/local/lib/node_modules /opt/yarn-* /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/yarn /usr/local/bin/yarnpkg
+FROM gcr.io/distroless/cc-debian12:nonroot AS service
+COPY --from=service-deps /usr/local/bin/node /usr/local/bin/node
 WORKDIR /app
 COPY --from=service-deps /app/node_modules ./node_modules
 COPY --from=build /app/server.mjs /app/otel.mjs ./
 COPY docs/benchmarks/results.json docs/benchmarks/results.json
-USER node
+USER 65532:65532
 ENV NODE_ENV=production
-CMD ["node","--import","./otel.mjs","server.mjs"]
+ENTRYPOINT ["/usr/local/bin/node"]
+CMD ["--import","./otel.mjs","server.mjs"]
 
 FROM alpine:3.23.5 AS web
 RUN apk upgrade --no-cache && apk add --no-cache nginx

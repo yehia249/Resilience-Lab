@@ -1,7 +1,18 @@
-# Benchmark status
+# Real local recordings
 
-No published performance benchmark runs yet. results.json is explicitly marked not_run. Do not infer production throughput, recovery, HPA or pod restart performance from unit tests or the frontend build.
+Captured on 2026-11-01T16:46:40.120Z. Completed 14/40 required runs. Target: http://localhost:8089 (k3d).
 
-Method: healthy synthetic-shopping baseline; inject one fault; sample Prometheus-based telemetry every second; require fault cleared, all measured deployments ready, error rate below 2% and p95 below 250 ms for ten consecutive samples. Record duration and peaks, preserve raw snapshots, and repeat at least ten times per fault. The runner respects visitor rate limits, so a full run is long. k6 scripts provide separate baseline (five minutes), spike (ninety seconds), and soak (one hour) tests.
+| Fault | Runs | Median recovery s | Sample p95 recovery s |
+|---|---:|---:|---:|
+| KILL_PAYMENT | 4 | 51.784 | 118.945 |
+| ADD_CATALOG_LATENCY | 4 | 61.024 | 120.572 |
+| SPIKE_TRAFFIC | 3 | 70.798 | 78.659 |
+| SLOW_DATABASE | 3 | 70.573 | 245.202 |
 
-The local Docker kill adapter deliberately holds the process stopped for twelve seconds before restart. Its timing is not Kubernetes pod restart performance. Histogram quantiles are estimates. Single-node results and synthetic processor behavior do not generalize to distributed production traffic. Actual completed checks and measurements belong in STATUS.md and integration.json; they do not substitute for the forty-run benchmark.
+Every JSON file contains actual timestamped metrics, topology, request timings, events and retrieved normalized OpenTelemetry spans. Payment processing is deliberately simulated; requests, faults, persistence and timings are real. No missing measurements are filled with generated values.
+
+Method: wait for a healthy baseline; capture baseline frames; inject exactly one normal-TTL fault; wait for the system recovery event (ten consecutive healthy samples and ready replicas); capture the result. The local administrative fixture resets only the visitor quota between runs; the global fault slot, TTL and cooldown remain enforced. Payment-kill runs include a real checkout burst to exercise each gateway replica's breaker before pods recover.
+
+Raw evidence is in recordings/ and apps/web/public/recordings/. Runtime image digest, runtime Node version and recorder revision are embedded. Recordings describe their captured image, not a later build. Replay is labelled and never presented as a current live system.
+
+Caveats: one shared Windows/WSL machine; CPU-driven HPA; histogram percentile estimates; deliberately synthetic shoppers; no external payment network; local background test activity can affect timings. These are local observations, not production or cloud claims.

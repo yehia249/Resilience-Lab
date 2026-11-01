@@ -12,7 +12,16 @@ import {
   type LabMetrics,
 } from '../../../packages/common/src/schemas';
 import './style.css';
+import './modes.css';
+import { useReplay } from './replay';
 const API = import.meta.env.VITE_API_URL ?? '';
+const BASE = import.meta.env.BASE_URL;
+const localOrigin = ['localhost', '127.0.0.1'].includes(location.hostname);
+function route() {
+  return location.hash.startsWith('#/')
+    ? location.hash.slice(1)
+    : location.pathname.replace(BASE, '/');
+}
 const repo = 'https://github.com/yehia249/Resilience-Lab';
 function saved(key: string) {
   try {
@@ -159,6 +168,14 @@ function Chart({ samples }: { samples: Sample[] }) {
   );
 }
 function App() {
+  const [mode, setMode] = useState<'live' | 'replay'>(
+    new URLSearchParams(location.search).get('mode') === 'replay'
+      ? 'replay'
+      : localOrigin && (import.meta.env.VITE_LAB_MODE === 'live' || import.meta.env.DEV)
+        ? 'live'
+        : 'replay',
+  );
+  const replay = useReplay(mode === 'replay');
   const [theme, setTheme] = useState(saved('lab.theme') ?? 'system');
   const [tour, setTour] = useState(saved('lab.tour') !== 'hidden');
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
@@ -169,17 +186,45 @@ function App() {
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
   const [faultBusy, setFaultBusy] = useState(false);
-  const [now, setNow] = useState(Date.now());
+  const [wallNow, setNow] = useState(Date.now());
   const [bench, setBench] = useState<ReturnType<typeof BenchmarkResults.parse> | null>(null);
-  const [path, setPath] = useState(location.pathname);
+  const [path, setPath] = useState(route());
   const checkoutKey = useRef(crypto.randomUUID());
+  const now = mode === 'replay' ? (replay.frame?.ts ?? wallNow) : wallNow;
+  useEffect(() => {
+    if (mode !== 'replay' || !replay.frame || !replay.recording) return;
+    setSnapshot(replay.frame);
+    setConnected(true);
+    setProducts(replay.recording.products);
+    setSamples(replay.history.map((s) => ({ ...s.metrics, ts: s.ts, fault: !!s.fault })));
+  }, [mode, replay.frame, replay.recording]);
+  useEffect(() => {
+    if (mode !== 'replay') return;
+    void fetch(BASE + 'recordings/benchmarks.json')
+      .then((r) => r.json())
+      .then((data) => setBench(BenchmarkResults.parse(data)))
+      .catch(() => {});
+  }, [mode, replay.index]);
+  function switchMode(next: 'live' | 'replay') {
+    if (next === 'live' && !localOrigin) {
+      window.open('http://localhost:8088/?mode=live', '_blank', 'noopener,noreferrer');
+      return;
+    }
+    setSnapshot(null);
+    setSamples([]);
+    setConnected(false);
+    setProducts([]);
+    setMessage('');
+    setCart({});
+    setMode(next);
+  }
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
     save('lab.theme', theme);
   }, [theme]);
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 1000);
-    const pop = () => setPath(location.pathname);
+    const pop = () => setPath(route());
     window.addEventListener('popstate', pop);
     return () => {
       clearInterval(id);
@@ -187,7 +232,7 @@ function App() {
     };
   }, []);
   useEffect(() => {
-    if (!connected) return;
+    if (!connected || mode !== 'live') return;
     let active = true;
     void api('/api/cart')
       .then((data) => {
@@ -199,8 +244,9 @@ function App() {
     return () => {
       active = false;
     };
-  }, [connected]);
+  }, [connected, mode]);
   useEffect(() => {
+    if (mode !== 'live') return;
     let source: EventSource | null = null;
     let timer: ReturnType<typeof setTimeout>;
     let stopped = false;
@@ -233,8 +279,9 @@ function App() {
       source?.close();
       clearTimeout(timer);
     };
-  }, []);
+  }, [mode]);
   useEffect(() => {
+    if (mode !== 'live') return;
     let active = true;
     async function load() {
       try {
@@ -263,13 +310,14 @@ function App() {
       active = false;
       clearInterval(timer);
     };
-  }, []);
+  }, [mode]);
   function navigate(to: string) {
-    history.pushState({}, '', to);
+    history.pushState({}, '', to === '/' ? BASE : BASE + '#' + to);
     setPath(to);
     window.scrollTo(0, 0);
   }
   async function add(p: Product) {
+    if (mode === 'replay') return;
     setBusy(true);
     try {
       const next = { ...cart, [p.id]: Math.min(20, (cart[p.id] ?? 0) + 1) };
@@ -288,6 +336,15 @@ function App() {
     }
   }
   async function checkout() {
+    if (mode === 'replay') {
+      const c = replay.seekCheckout();
+      setMessage(
+        c
+          ? `Recorded checkout: ${c.result.status} in ${c.result.latencyMs.toFixed(0)} ms, ${c.result.attempts} payment attempt(s). Captured ${new Date(c.ts).toLocaleTimeString()}.`
+          : 'No checkout was captured in this recording.',
+      );
+      return;
+    }
     setBusy(true);
     setMessage('Checking out…');
     try {
@@ -316,6 +373,11 @@ function App() {
     }
   }
   async function inject(type: FaultType) {
+    if (mode === 'replay') {
+      await replay.selectFault(type);
+      setMessage('Playing a real recorded experiment. No fault is being injected now.');
+      return;
+    }
     setFaultBusy(true);
     try {
       await api('/api/chaos', { method: 'POST', body: JSON.stringify({ type }) });
@@ -329,26 +391,37 @@ function App() {
   const fault = snapshot?.fault;
   const cooldown = Math.max(0, Math.ceil(((snapshot?.cooldownUntil ?? 0) - now) / 1000));
   const remaining = fault ? Math.max(0, Math.ceil((fault.expiresAt - now) / 1000)) : 0;
-  const disabledReason = !connected
-    ? 'Backend disconnected — reconnecting'
-    : snapshot?.chaosEnabled === false
-      ? 'Chaos is disabled by the operator'
-      : fault
-        ? `A visitor is running ${fault.type.toLowerCase().replaceAll('_', ' ')} · ${remaining} s remaining`
-        : cooldown
-          ? `Cooling down · ${cooldown} s remaining`
-          : faultBusy
-            ? 'Sending fault request…'
-            : '';
+  const disabledReason =
+    mode === 'replay'
+      ? replay.loading
+        ? 'Loading a real recording…'
+        : !replay.index?.runs.length
+          ? 'Real recordings are still being captured'
+          : ''
+      : !connected
+        ? 'Backend disconnected — reconnecting'
+        : snapshot?.chaosEnabled === false
+          ? 'Chaos is disabled by the operator'
+          : fault
+            ? `A visitor is running ${fault.type.toLowerCase().replaceAll('_', ' ')} · ${remaining} s remaining`
+            : cooldown
+              ? `Cooling down · ${cooldown} s remaining`
+              : faultBusy
+                ? 'Sending fault request…'
+                : '';
   const count = Object.values(cart).reduce((a, b) => a + b, 0);
-  const recovered = snapshot?.events.find((e) => e.kind === 'recovered');
+  const recovered = snapshot?.events.find(
+    (e) =>
+      e.kind === 'recovered' &&
+      (mode !== 'replay' || e.ts >= (replay.recording?.faultStartedAt ?? Infinity)),
+  );
   return (
     <div className="shell">
       <header>
         <div className="brand-row">
           <a
             className="brand"
-            href="/"
+            href={BASE}
             onClick={(e) => {
               e.preventDefault();
               navigate('/');
@@ -361,7 +434,7 @@ function App() {
           </a>
           <nav aria-label="Main navigation">
             <a
-              href="/"
+              href={BASE}
               aria-current={path === '/' ? 'page' : undefined}
               onClick={(e) => {
                 e.preventDefault();
@@ -371,7 +444,7 @@ function App() {
               The lab
             </a>
             <a
-              href="/engineering"
+              href={BASE + '#/engineering'}
               aria-current={path === '/engineering' ? 'page' : undefined}
               onClick={(e) => {
                 e.preventDefault();
@@ -393,7 +466,11 @@ function App() {
         </div>
         <div className="hero">
           <div>
-            <div className="eyebrow">A LIVE SYSTEM. A LITTLE CONTROLLED CHAOS.</div>
+            <div className="eyebrow">
+              {mode === 'replay'
+                ? 'A REAL SYSTEM. RECORDED EXPERIMENTS.'
+                : 'A LIVE SYSTEM. A LITTLE CONTROLLED CHAOS.'}
+            </div>
             <h1>
               Break something.
               <br />
@@ -407,22 +484,87 @@ function App() {
           </div>
           <div className={'connection ' + (connected ? 'online' : '')}>
             <span className="pulse" />
-            {connected ? 'SYSTEM CONNECTED' : 'BACKEND OFFLINE'}
+            {mode === 'replay'
+              ? replay.playing
+                ? 'REPLAYING A REAL CAPTURE'
+                : 'RECORDED SYSTEM SNAPSHOT'
+              : connected
+                ? 'SYSTEM CONNECTED'
+                : 'BACKEND OFFLINE'}
             <small>
-              {connected ? 'Live infrastructure · 1 s updates' : 'Waiting for real infrastructure'}
+              {mode === 'replay'
+                ? 'Historical measurements, clearly labelled'
+                : connected
+                  ? 'Live infrastructure · 1 s updates'
+                  : 'Waiting for real infrastructure'}
             </small>
           </div>
         </div>
       </header>
+      <div className="mode-row">
+        <div className="mode-switch" role="group" aria-label="Laboratory mode">
+          <button aria-pressed={mode === 'replay'} onClick={() => switchMode('replay')}>
+            Replay recordings
+          </button>
+          <button aria-pressed={mode === 'live'} onClick={() => switchMode('live')}>
+            Live {localOrigin ? 'system' : 'locally ↗'}
+          </button>
+        </div>
+        <span>
+          {mode === 'replay'
+            ? `${replay.index?.runs.length ?? 0} / ${replay.index?.expectedRuns ?? 40} real runs published`
+            : 'Real local services · no recordings'}
+        </span>
+      </div>
+      {mode === 'replay' && (
+        <aside className="replay-banner" role="status">
+          <div>
+            <strong>
+              Replay of a real recording from the live system, captured on{' '}
+              {replay.recording?.capturedAt.slice(0, 10) ?? 'a capture still loading'}. Run it live
+              with <code>make dev</code>.
+            </strong>
+            <p>
+              {replay.recording
+                ? `${replay.recording.type.replaceAll('_', ' ')} · Kubernetes · ${replay.recording.id} · observed recovery ${replay.recording.recoverySeconds.toFixed(1)} s`
+                : 'Only completed real recordings are published. No synthetic telemetry is generated.'}
+            </p>
+          </div>
+          <div className="player-controls">
+            <button disabled={!replay.recording} onClick={replay.toggle}>
+              {replay.playing ? 'Pause' : 'Play'}
+            </button>
+            <button disabled={!replay.recording} onClick={replay.restart}>
+              Restart
+            </button>
+            <label>
+              Speed{' '}
+              <select
+                value={replay.speed}
+                onChange={(e) => replay.setSpeed(Number(e.target.value))}
+              >
+                {[1, 2, 4].map((n) => (
+                  <option key={n} value={n}>
+                    {n}×
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+          {replay.error && <p className="replay-error">{replay.error}</p>}
+        </aside>
+      )}
       {path === '/engineering' ? (
-        <Engineering snapshot={snapshot} bench={bench} />
+        <Engineering snapshot={snapshot} bench={bench} mode={mode} />
       ) : (
         <>
           {tour && (
             <aside className="tour">
               <span className="tour-number">02:00</span>
               <p>
-                <strong>Your two-minute experiment</strong>
+                <strong>
+                  {mode === 'replay' ? 'Your two-minute replay' : 'Your two-minute experiment'}
+                </strong>
                 <br />
                 Kill payment → try Checkout → watch the circuit breaker → see the order recover.
               </p>
@@ -437,7 +579,7 @@ function App() {
               </button>
             </aside>
           )}
-          {!connected && (
+          {!connected && mode === 'live' && (
             <aside className="offline" role="status">
               <strong>
                 {snapshot ? 'Connection lost. Reconnecting…' : 'The lab backend is offline.'}
@@ -453,7 +595,7 @@ function App() {
                 </span>
               )}
               <a
-                href="/engineering"
+                href={BASE + '#/engineering'}
                 onClick={(e) => {
                   e.preventDefault();
                   navigate('/engineering');
@@ -476,7 +618,11 @@ function App() {
                     <span className="section-index">01</span> System overview
                   </h2>
                   <span className="label">
-                    {snapshot ? 'MEASURED TELEMETRY' : 'AWAITING TELEMETRY'}
+                    {snapshot
+                      ? mode === 'replay'
+                        ? 'RECORDED TELEMETRY'
+                        : 'MEASURED TELEMETRY'
+                      : 'AWAITING TELEMETRY'}
                   </span>
                 </div>
                 <div className="stats">
@@ -559,7 +705,7 @@ function App() {
                           ? `breaker: ${snapshot?.breaker ?? 'unknown'}`
                           : s.cpuPct === null
                             ? 'CPU unavailable'
-                            : `${s.cpuPct.toFixed(1)}% of VM CPU`}
+                            : `${s.cpuPct.toFixed(1)}% of 2-core budget`}
                       </span>
                     </div>
                   ))}
@@ -567,9 +713,11 @@ function App() {
                 <div className="system-note">
                   <span>
                     <i className="status-dot" />{' '}
-                    {connected
-                      ? 'Real requests. Real service responses.'
-                      : 'Infrastructure status unavailable'}
+                    {mode === 'replay'
+                      ? 'Captured requests. Historical service responses.'
+                      : connected
+                        ? 'Real requests. Real service responses.'
+                        : 'Infrastructure status unavailable'}
                   </span>
                   <span>Gateway → services → data</span>
                 </div>
@@ -579,7 +727,9 @@ function App() {
                   <h2>
                     <span className="section-index">02</span> The last 30 seconds
                   </h2>
-                  <span className="label">LIVE WINDOW</span>
+                  <span className="label">
+                    {mode === 'replay' ? 'RECORDED WINDOW' : 'LIVE WINDOW'}
+                  </span>
                 </div>
                 <Chart samples={samples} />
               </section>
@@ -588,7 +738,9 @@ function App() {
                   <h2>
                     <span className="section-index">03</span> Follow a checkout
                   </h2>
-                  <span className="label">LATEST REAL REQUEST</span>
+                  <span className="label">
+                    {mode === 'replay' ? 'RECORDED REAL REQUEST' : 'LATEST REAL REQUEST'}
+                  </span>
                 </div>
                 <p className="card-description">Where one request spends its time.</p>
                 {!snapshot?.trace.length ? (
@@ -659,7 +811,11 @@ function App() {
                   </h2>
                   <span className="badge">CONTROLLED</span>
                 </div>
-                <p className="card-description">One fault at a time. Every fault auto-reverts.</p>
+                <p className="card-description">
+                  {mode === 'replay'
+                    ? 'Choose a real captured experiment. These buttons play recordings.'
+                    : 'One fault at a time. Every fault auto-reverts.'}
+                </p>
                 <div className="fault-grid">
                   {faults.map((f) => (
                     <button
@@ -676,7 +832,10 @@ function App() {
                 </div>
                 <p className="fault-status" role="status">
                   <i className={'status-dot ' + (disabledReason ? 'muted' : '')} />
-                  {disabledReason || 'Ready for your next experiment'}
+                  {disabledReason ||
+                    (mode === 'replay'
+                      ? 'Choose a fault to play its real recording'
+                      : 'Ready for your next experiment')}
                 </p>
                 <button
                   className="secondary full"
@@ -695,12 +854,16 @@ function App() {
                   <h2>Try the shop</h2>
                   <span className="bag">{count} ITEMS</span>
                 </div>
-                <p className="card-description">A real cart. A simulated payment processor.</p>
+                <p className="card-description">
+                  {mode === 'replay'
+                    ? 'Recorded products and checkout results. Shopping is available in live mode.'
+                    : 'A real cart. A simulated payment processor.'}
+                </p>
                 <div className="products">
                   {products.length ? (
                     products.slice(0, 3).map((p) => (
                       <button
-                        disabled={busy || !connected}
+                        disabled={mode === 'replay' || busy || !connected}
                         key={p.id}
                         className="product"
                         onClick={() => void add(p)}
@@ -725,7 +888,7 @@ function App() {
                     <div className="products">
                       {products.slice(3).map((p) => (
                         <button
-                          disabled={busy || !connected}
+                          disabled={mode === 'replay' || busy || !connected}
                           key={p.id}
                           className="product"
                           onClick={() => void add(p)}
@@ -743,10 +906,14 @@ function App() {
                 )}
                 <button
                   className="primary full"
-                  disabled={busy || !count || !connected}
+                  disabled={mode === 'replay' ? !replay.recording : busy || !count || !connected}
                   onClick={() => void checkout()}
                 >
-                  {busy ? 'Working…' : `Checkout (${count})`}
+                  {mode === 'replay'
+                    ? 'View a recorded checkout'
+                    : busy
+                      ? 'Working…'
+                      : `Checkout (${count})`}
                   <span>→</span>
                 </button>
                 <p className="shop-result" role="status">
@@ -755,10 +922,19 @@ function App() {
               </section>
               <section className="card events">
                 <div className="section-heading">
-                  <h2>What the system is doing</h2>
+                  <h2>
+                    {mode === 'replay' ? 'Recorded system events' : 'What the system is doing'}
+                  </h2>
                   <span className="live-dot" />
                 </div>
-                <div className="event-list" role="log" tabIndex={0} aria-label="Live system events" aria-live="polite" aria-relevant="additions">
+                <div
+                  className="event-list"
+                  role="log"
+                  tabIndex={0}
+                  aria-label={mode === 'replay' ? 'Recorded system events' : 'Live system events'}
+                  aria-live="polite"
+                  aria-relevant="additions"
+                >
                   {snapshot?.events.length ? (
                     snapshot.events.map((e, i) => (
                       <div className={'event ' + e.level} key={e.ts + e.kind + i}>
@@ -797,9 +973,11 @@ function App() {
 function Engineering({
   snapshot,
   bench,
+  mode,
 }: {
   snapshot: Snapshot | null;
   bench: ReturnType<typeof BenchmarkResults.parse> | null;
+  mode: 'live' | 'replay';
 }) {
   return (
     <main className="engineering">
@@ -855,8 +1033,9 @@ function Engineering({
         <section className="card">
           <h2>Resource budget</h2>
           <p>
-            Target: Oracle Always Free ARM, 2 OCPUs / 12 GB RAM. Live usage is unavailable until the
-            cluster reports it.
+            {mode === 'replay'
+              ? 'Captured Kubernetes usage from the selected real recording. CPU percentages use a 2-core reference budget; the local test VM has 4 virtual CPUs and a 5 GB memory cap.'
+              : 'Measured local Kubernetes usage. CPU percentages use a 2-core reference budget.'}
           </p>
           {snapshot?.services.map((s) => (
             <div className="resource" key={s.name}>
@@ -950,7 +1129,7 @@ function Engineering({
         <h2>How this was built</h2>
         <p>
           TypeScript · React 18 · Fastify · Postgres 16 · Redis 7 · OpenTelemetry · Prometheus ·
-          Jaeger · Docker · k3s · Kustomize · Terraform · GitHub Actions.
+          Jaeger · Docker · k3s · Kustomize · GitHub Actions · GitHub Pages replay hosting.
         </p>
         <h3>Honest limitations</h3>
         <p>

@@ -11,5 +11,6 @@ node_modules
 **/.terraform
 loadtests
 docs/benchmarks/raw
+**/*.tmp
 playwright-report
 test-results

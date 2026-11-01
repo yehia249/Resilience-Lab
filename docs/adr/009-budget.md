@@ -1,15 +1,7 @@
-# ADR 009: Always Free budget
+# ADR 009: Existing machine and GitHub only
 
-Status: accepted for implementation; verification is tracked in STATUS.md.
+Status: accepted; supersedes the initial cloud plan.
 
-## Decision
+The user requires no new accounts or cloud infrastructure. Run services with Docker Compose and k3d on the existing workstation. Publish recorded replay on the existing repository's GitHub Pages.
 
-Fix the OCI VM at 2 OCPUs, 12 GB memory and a 50-GB boot volume, in the home region, with a saved resource plan and explicit first-apply approval.
-
-## Reason
-
-Current Oracle Always Free documentation is stricter than old 4/24 examples. A zero-dollar boundary prohibits opportunistic paid fallback.
-
-## Consequences
-
-Free-tier eligibility depends on tenancy-wide usage and provider policy. No guaranteed immunity from idle reclamation is claimed.
+Public visitors explore clearly labelled measurements and cannot send live faults or orders. Local resource contention is a benchmark limitation.

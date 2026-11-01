@@ -1,1 +1,93 @@
-{"status":"not_run","runs":[],"measuredAt":null,"target":null}
+{
+  "status": "measured",
+  "runs": [
+    {
+      "type": "KILL_PAYMENT",
+      "duration": 118.945,
+      "peakP95": 3973.529411764704,
+      "peakErrorRate": 0.8827903716212429
+    },
+    {
+      "type": "ADD_CATALOG_LATENCY",
+      "duration": 67.642,
+      "peakP95": 4335.996104848117,
+      "peakErrorRate": 19.64345211729704
+    },
+    {
+      "type": "SPIKE_TRAFFIC",
+      "duration": 78.659,
+      "peakP95": 4047.243285281782,
+      "peakErrorRate": 2.591835103913129
+    },
+    {
+      "type": "SLOW_DATABASE",
+      "duration": 245.202,
+      "peakP95": 642.298592522235,
+      "peakErrorRate": 0
+    },
+    {
+      "type": "KILL_PAYMENT",
+      "duration": 44.573,
+      "peakP95": 3981.250000000001,
+      "peakErrorRate": 0
+    },
+    {
+      "type": "ADD_CATALOG_LATENCY",
+      "duration": 53.815,
+      "peakP95": 873.5714285714249,
+      "peakErrorRate": 0
+    },
+    {
+      "type": "SPIKE_TRAFFIC",
+      "duration": 70.199,
+      "peakP95": 88.43578463517541,
+      "peakErrorRate": 0
+    },
+    {
+      "type": "SLOW_DATABASE",
+      "duration": 70.573,
+      "peakP95": 2136.764705882355,
+      "peakErrorRate": 0
+    },
+    {
+      "type": "KILL_PAYMENT",
+      "duration": 24.82,
+      "peakP95": 1332.5050579101512,
+      "peakErrorRate": 0
+    },
+    {
+      "type": "ADD_CATALOG_LATENCY",
+      "duration": 120.572,
+      "peakP95": 1874.1477272727257,
+      "peakErrorRate": 0
+    },
+    {
+      "type": "SPIKE_TRAFFIC",
+      "duration": 70.798,
+      "peakP95": 346.1956521739113,
+      "peakErrorRate": 0
+    },
+    {
+      "type": "SLOW_DATABASE",
+      "duration": 53.205,
+      "peakP95": 498.64709268854347,
+      "peakErrorRate": 0
+    },
+    {
+      "type": "KILL_PAYMENT",
+      "duration": 58.994,
+      "peakP95": 4802.899135503177,
+      "peakErrorRate": 0.6782852772964189
+    },
+    {
+      "type": "ADD_CATALOG_LATENCY",
+      "duration": 54.406,
+      "peakP95": 3360.2830861967145,
+      "peakErrorRate": 2.510957025939329
+    }
+  ],
+  "measuredAt": "2026-11-01T16:46:40.120Z",
+  "target": "http://localhost:8089",
+  "expectedRuns": 40,
+  "complete": false
+}

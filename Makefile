@@ -1,4 +1,4 @@
-.PHONY: dev test deploy destroy smoke bench k3d-up k3d-down
+.PHONY: dev test deploy destroy smoke bench record replay k3d-up k3d-down
 dev:
 	node scripts/setup-env.mjs
 	docker compose up -d --build
@@ -8,13 +8,16 @@ test:
 	pnpm test
 	pnpm build
 deploy:
-	bash scripts/deploy.sh
+	@echo 'Push main to publish with .github/workflows/pages.yml.'
 destroy:
-	@echo 'Destructive operation: review terraform plan -destroy first; no automatic destroy is performed.'
+	docker compose down
 smoke:
 	pnpm smoke
 bench:
-	pnpm bench
+	pnpm exec tsx scripts/record.ts
+record: bench
+replay:
+	pnpm dev
 k3d-up:
 	bash scripts/k3d-up.sh
 k3d-down:

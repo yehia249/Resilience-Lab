@@ -1,0 +1,49 @@
+import { test, expect } from '@playwright/test';
+import AxeBuilder from '@axe-core/playwright';
+test('public replay is labelled, uses real files, plays each fault and never contacts a backend', async ({
+  page,
+}) => {
+  test.skip(process.env.RUN_REPLAY_E2E !== 'true', 'Requires the built replay frontend');
+  const backendCalls: string[] = [];
+  page.on('request', (r) => {
+    if (r.url().includes('/api/') || r.url().includes('/v1/') || r.method() === 'POST')
+      backendCalls.push(r.url());
+  });
+  await page.goto('./');
+  await expect(page.locator('.replay-banner')).toContainText(
+    'Replay of a real recording from the live system, captured on',
+  );
+  await expect(page.locator('.connection')).toContainText('RECORDED SYSTEM SNAPSHOT');
+  await expect(page.locator('.replay-banner')).toContainText('make dev');
+  await expect(page.locator('.stat strong').first()).not.toContainText('—');
+  for (const [button, type] of [
+    ['Kill payment service', 'KILL PAYMENT'],
+    ['Add latency', 'ADD CATALOG LATENCY'],
+    ['Spike traffic', 'SPIKE TRAFFIC'],
+    ['Slow database', 'SLOW DATABASE'],
+  ]) {
+    await page.getByRole('button', { name: new RegExp(button) }).click();
+    await expect(page.locator('.replay-banner')).toContainText(type);
+    await expect(page.locator('.connection')).toContainText('REPLAYING A REAL CAPTURE');
+  }
+  await page.getByRole('button', { name: 'Pause', exact: true }).click();
+  await page.getByRole('button', { name: 'View a recorded checkout' }).click();
+  await expect(page.locator('.shop-result')).toContainText('Recorded checkout:');
+  expect(backendCalls).toEqual([]);
+  await page.getByRole('link', { name: 'Engineering' }).click();
+  await expect(page.getByRole('heading', { name: 'Under the hood' })).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'Under the hood' })).toBeVisible();
+  await page.getByRole('link', { name: 'The lab', exact: true }).click();
+  for (const colorScheme of ['light', 'dark'] as const) {
+    await page.emulateMedia({ colorScheme });
+    expect(
+      (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze())
+        .violations,
+    ).toEqual([]);
+    await page.screenshot({ path: `test-results/replay-${colorScheme}.png`, fullPage: true });
+  }
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.screenshot({ path: 'test-results/replay-mobile.png', fullPage: true });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
