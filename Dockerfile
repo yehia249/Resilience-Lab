@@ -1,4 +1,4 @@
-FROM node:20.20.2-bookworm-slim AS build
+FROM node:26.13.0-bookworm-slim AS build
 WORKDIR /app
 RUN npm install -g pnpm@10.20.0
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
@@ -12,7 +12,7 @@ ENV VITE_LAB_MODE=live
 RUN pnpm build
 RUN pnpm exec esbuild apps/runtime/src/main.ts --bundle --platform=node --packages=external --format=esm --outfile=server.mjs && pnpm exec esbuild apps/runtime/src/otel.ts --bundle --platform=node --packages=external --format=esm --outfile=otel.mjs
 
-FROM node:20.20.2-bookworm-slim AS service-deps
+FROM node:26.13.0-bookworm-slim AS service-deps
 WORKDIR /app
 RUN npm install -g pnpm@10.20.0
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
