@@ -115,6 +115,12 @@ for (const type of FaultType.options) {
   const response = await inject(type);
   if (!response.ok)
     throw Error(`${type}: injection failed ${response.status}: ${await response.text()}`);
+  const configuredTtlMs =
+    type === 'KILL_PAYMENT' ? 90000 : type === 'SPIKE_TRAFFIC' ? 60000 : 30000;
+  const observedTtlMs = Number(redisCommand('PTTL', `fault:${type}`));
+  if (!(observedTtlMs > 0 && observedTtlMs <= configuredTtlMs))
+    throw Error('Fault flag must have a real bounded Redis TTL');
+  measurements.push({ type, configuredTtlMs, observedTtlMs });
   const second = await inject(type);
   if (second.status !== 409) throw Error('Global fault slot failed');
   if (type === 'KILL_PAYMENT') {
@@ -125,18 +131,6 @@ for (const type of FaultType.options) {
     queuedOrderId = order.orderId;
     measurements.push({ type, queuedOrderId: order.orderId, checkoutMs: order.latencyMs });
   }
-  await until(async () => {
-    const s = await snapshot();
-    return !s.fault && s.cooldownUntil > Date.now();
-  });
-  const cooling = await inject(type);
-  if (
-    cooling.status !== 409 ||
-    !String(((await cooling.json()) as { error: string }).error)
-      .toLowerCase()
-      .includes('cooling')
-  )
-    throw Error('The real post-fault cooldown must reject another injection');
   if (type === 'ADD_CATALOG_LATENCY' || type === 'SLOW_DATABASE') {
     const start = performance.now();
     const r = await fetch(base + '/api/products');
@@ -156,6 +150,18 @@ for (const type of FaultType.options) {
       throw Error('Traffic did not increase');
     measurements.push({ type, baselineRps: baseline.metrics.rps, spikeRps: during.metrics.rps });
   }
+  await until(async () => {
+    const s = await snapshot();
+    return !s.fault && s.cooldownUntil > Date.now();
+  });
+  const cooling = await inject(type);
+  if (
+    cooling.status !== 409 ||
+    !String(((await cooling.json()) as { error: string }).error)
+      .toLowerCase()
+      .includes('cooling')
+  )
+    throw Error('The real post-fault cooldown must reject another injection');
   await until(async () => {
     const s = await snapshot();
     return s.recoveries.some(
@@ -216,7 +222,11 @@ redisCommand('SET', quotaKey, '3', 'EX', '600');
 const limited = await inject('ADD_CATALOG_LATENCY');
 if (limited.status !== 429) throw Error('Three faults per ten minutes must be enforced');
 resetQuota();
-measurements.push({ visitorQuotaStatus: limited.status, cooldownVerified: true });
+measurements.push({
+  visitorQuotaStatus: limited.status,
+  seededPriorUses: 3,
+  cooldownVerified: true,
+});
 await mkdir('docs/benchmarks', { recursive: true });
 await writeFile(
   'docs/benchmarks/integration.json',
