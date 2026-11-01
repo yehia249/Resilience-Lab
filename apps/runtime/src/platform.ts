@@ -1,13 +1,6 @@
 import Redis from 'ioredis';
 import pg from 'pg';
-import {
-  context,
-  propagation,
-  trace,
-  SpanStatusCode,
-  SpanKind,
-  ROOT_CONTEXT,
-} from '@opentelemetry/api';
+import { context, trace, SpanStatusCode } from '@opentelemetry/api';
 import { Registry, Histogram, Counter, Gauge, collectDefaultMetrics } from 'prom-client';
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
@@ -205,42 +198,6 @@ export async function server(port: number) {
         .digest('hex'),
   });
   const started = new WeakMap<object, number>();
-  const requestTraceIds = new WeakMap<object, string>();
-  app.addHook('onRoute', (options) => {
-    if (['/metrics', '/healthz', '/readyz'].includes(options.url)) return;
-    const handler = options.handler;
-    options.handler = function (request, reply) {
-      const parent = propagation.extract(ROOT_CONTEXT, request.headers);
-      return context.with(parent, () =>
-        trace.getTracer(service).startActiveSpan(
-          `${request.method} ${options.url}`,
-          {
-            kind: SpanKind.SERVER,
-            attributes: { 'http.request.method': request.method, 'http.route': options.url },
-          },
-          async (span) => {
-            requestTraceIds.set(request, span.spanContext().traceId);
-            span.setAttribute(
-              'lab.traceparent_received',
-              typeof request.headers.traceparent === 'string',
-            );
-            reply.header('x-trace-id', span.spanContext().traceId);
-            try {
-              const result = await handler.call(this, request, reply);
-              if (reply.statusCode >= 500) span.setStatus({ code: SpanStatusCode.ERROR });
-              return result;
-            } catch (error) {
-              span.setStatus({ code: SpanStatusCode.ERROR });
-              if (error instanceof Error) span.recordException(error);
-              throw error;
-            } finally {
-              span.end();
-            }
-          },
-        ),
-      );
-    };
-  });
   app.addHook('onRequest', async (req, reply) => {
     started.set(req, performance.now());
     reply.header('x-trace-id', trace.getSpan(context.active())?.spanContext().traceId ?? req.id);
@@ -253,8 +210,7 @@ export async function server(port: number) {
       );
       app.log.info(
         {
-          traceId:
-            requestTraceIds.get(req) ?? trace.getSpan(context.active())?.spanContext().traceId,
+          traceId: trace.getSpan(context.active())?.spanContext().traceId,
           route: req.routeOptions.url,
           status: reply.statusCode,
         },

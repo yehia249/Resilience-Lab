@@ -134,12 +134,20 @@ redis.call('SET',KEYS[1],ARGV[2],'PX',ARGV[3]);redis.call('INCR',KEYS[3]);if red
     try {
       await redis.set(`fault:${type}`, '1', 'PX', fault.expiresAt - startedAt);
       await redis.set('recovery.pending', JSON.stringify(fault), 'EX', 600);
-      if (type === 'KILL_PAYMENT') await killPayment();
+      if (type === 'KILL_PAYMENT') {
+        await killPayment();
+        await redis.set(
+          'fault.kill_ack',
+          fault.id,
+          'PX',
+          Math.max(1, fault.expiresAt - Date.now()),
+        );
+      }
       faultGauge.set({ type }, 1);
       await emit('fault-injected', `${type.replaceAll('_', ' ').toLowerCase()} injected`, 'warn');
       return { active: fault };
     } catch (error) {
-      await redis.del('fault.active', `fault:${type}`, 'recovery.pending');
+      await redis.del('fault.active', `fault:${type}`, 'recovery.pending', 'fault.kill_ack');
       await emit('fault-failed', 'Fault adapter failed; slot released', 'error');
       throw error;
     }
@@ -153,11 +161,12 @@ redis.call('SET',KEYS[1],ARGV[2],'PX',ARGV[3]);redis.call('INCR',KEYS[3]);if red
   });
   async function clear(f: ActiveFault) {
     const cleared = await redis.eval(
-      `local raw=redis.call('GET',KEYS[1]);if raw and cjson.decode(raw).id==ARGV[1] then redis.call('DEL',KEYS[1],KEYS[2]);redis.call('SET',KEYS[3],ARGV[2],'PX',15000);return 1 end;return 0`,
-      3,
+      `local raw=redis.call('GET',KEYS[1]);if raw and cjson.decode(raw).id==ARGV[1] then redis.call('DEL',KEYS[1],KEYS[2],KEYS[4]);redis.call('SET',KEYS[3],ARGV[2],'PX',15000);return 1 end;return 0`,
+      4,
       'fault.active',
       `fault:${f.type}`,
       'fault.cooldown',
+      'fault.kill_ack',
       f.id,
       Date.now() + 15000,
     );
@@ -175,7 +184,7 @@ redis.call('SET',KEYS[1],ARGV[2],'PX',ARGV[3]);redis.call('INCR',KEYS[3]);if red
       if (!raw) return;
       const f = Fault.parse(JSON.parse(raw));
       let recovered = false;
-      if (f.type === 'KILL_PAYMENT') {
+      if (f.type === 'KILL_PAYMENT' && (await redis.get('fault.kill_ack')) === f.id) {
         try {
           if (process.env.CHAOS_ADAPTER === 'kubernetes') {
             const url = process.env.POD_KILL_PROXY_URL?.replace(/\/kill-payment$/, '/status');

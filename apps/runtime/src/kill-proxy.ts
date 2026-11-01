@@ -5,11 +5,25 @@ export async function killProxy() {
   app.get('/status', async (req, reply) => {
     if (!tokenMatches(req.headers['x-internal-token'], process.env.INTERNAL_TOKEN))
       return reply.code(403).send({ error: 'Forbidden' });
-    const deployment = (await kube('/apis/apps/v1/namespaces/lab-payment/deployments/payment')) as {
-      spec: { replicas: number };
-      status: { readyReplicas?: number };
-    };
-    return { ready: deployment.status.readyReplicas ?? 0, desired: deployment.spec.replicas };
+    const [deployment, pods] = (await Promise.all([
+      kube('/apis/apps/v1/namespaces/lab-payment/deployments/payment'),
+      kube('/api/v1/namespaces/lab-payment/pods?labelSelector=app%3Dpayment'),
+    ])) as [
+      { spec: { replicas: number } },
+      {
+        items: {
+          metadata: { deletionTimestamp?: string };
+          status?: { phase?: string; conditions?: { type: string; status: string }[] };
+        }[];
+      },
+    ];
+    const ready = pods.items.filter(
+      (p) =>
+        !p.metadata.deletionTimestamp &&
+        p.status?.phase === 'Running' &&
+        p.status.conditions?.some((c) => c.type === 'Ready' && c.status === 'True'),
+    ).length;
+    return { ready, desired: deployment.spec.replicas };
   });
   app.post('/kill-payment', async (req, reply) => {
     if (!tokenMatches(req.headers['x-internal-token'], process.env.INTERNAL_TOKEN))

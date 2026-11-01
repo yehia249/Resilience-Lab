@@ -1,7 +1,13 @@
-import { execFileSync } from 'node:child_process';
+import { execFileSync, execFile } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import { mkdir, writeFile } from 'node:fs/promises';
-import { Snapshot, FaultType, CheckoutResponse, Product } from '../packages/common/src/schemas';
+import {
+  Snapshot,
+  FaultType,
+  Fault,
+  CheckoutResponse,
+  Product,
+} from '../packages/common/src/schemas';
 import { sleep } from '../packages/common/src/resilience';
 const base = process.env.BASE_URL ?? 'http://localhost:8088';
 if (!['localhost', '127.0.0.1'].includes(new URL(base).hostname))
@@ -106,6 +112,20 @@ function orderState(id: string) {
 function redisCommand(...args: string[]) {
   return docker(['compose', 'exec', '-T', 'redis', 'redis-cli', '--raw', ...args]).trim();
 }
+function sampleTtl(type: FaultType): Promise<number> {
+  const args = ['compose', 'exec', '-T', 'redis', 'redis-cli', '--raw', 'PTTL', `fault:${type}`];
+  return new Promise((resolve, reject) => {
+    const child = execFile(
+      process.platform === 'win32' ? 'wsl' : 'docker',
+      process.platform === 'win32'
+        ? ['-d', 'ResilienceLab', '--cd', process.cwd(), '--', 'docker', ...args]
+        : args,
+      { encoding: 'utf8', timeout: 30000 },
+      (error, stdout) => (error ? reject(error) : resolve(Number(stdout.trim()))),
+    );
+    child.stdin?.end();
+  });
+}
 for (const type of FaultType.options) {
   let queuedOrderId: string | undefined;
   await ready();
@@ -117,12 +137,22 @@ for (const type of FaultType.options) {
     throw Error(`${type}: injection failed ${response.status}: ${await response.text()}`);
   const configuredTtlMs =
     type === 'KILL_PAYMENT' ? 90000 : type === 'SPIKE_TRAFFIC' ? 60000 : 30000;
-  const observedTtlMs = Number(redisCommand('PTTL', `fault:${type}`));
-  if (!(observedTtlMs > 0 && observedTtlMs <= configuredTtlMs))
-    throw Error('Fault flag must have a real bounded Redis TTL');
-  measurements.push({ type, configuredTtlMs, observedTtlMs });
+  const injected = Fault.parse(((await response.json()) as { active: unknown }).active);
+  if (injected.expiresAt - injected.startedAt !== configuredTtlMs)
+    throw Error('Fault expiry contract changed');
+  // Observe Redis without blocking the real checkout traffic during a short outage.
+  const ttlSample = sampleTtl(type).then(
+    (value) => ({ value }),
+    (error) => ({ error: String(error) }),
+  );
   const second = await inject(type);
-  if (second.status !== 409) throw Error('Global fault slot failed');
+  if (
+    second.status !== 409 ||
+    !String(((await second.json()) as { error: string }).error)
+      .toLowerCase()
+      .includes('another')
+  )
+    throw Error('Global active-fault slot failed');
   if (type === 'KILL_PAYMENT') {
     await Promise.all(Array.from({ length: 12 }, checkout));
     await until(async () => (await snapshot()).breaker === 'open', 15000);
@@ -162,6 +192,17 @@ for (const type of FaultType.options) {
       .includes('cooling')
   )
     throw Error('The real post-fault cooldown must reject another injection');
+  const sampled = await ttlSample;
+  if ('error' in sampled) throw Error(sampled.error);
+  const observedTtlMs = sampled.value;
+  if (!(observedTtlMs === -2 || (observedTtlMs > 0 && observedTtlMs <= configuredTtlMs)))
+    throw Error('Fault flag must expire or already have reverted; an unlimited TTL is invalid');
+  measurements.push({
+    type,
+    configuredTtlMs,
+    observedTtlMs,
+    flagAlreadyReverted: observedTtlMs === -2,
+  });
   await until(async () => {
     const s = await snapshot();
     return s.recoveries.some(

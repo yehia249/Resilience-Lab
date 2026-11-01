@@ -76,7 +76,7 @@ if (process.env.JAEGER_URL) {
         (s) => s.tags?.filter((t) => t.key.startsWith('lab.traceparent_')) ?? [],
       ),
     };
-    if (count > 0 && services.includes('gateway') && services.length >= 2) {
+    if (count > 0 && ['gateway', 'cart', 'catalog', 'payment'].every((s) => services.includes(s))) {
       traceSpans = count;
       traceServices = services;
       break;
@@ -123,6 +123,7 @@ console.log(
       telemetryTs: snapshot.ts,
       liveSseSnapshots: snapshots,
       traceSpans,
+      traceId: checkoutTraceId,
       traceServices,
       measuredAt: new Date().toISOString(),
     },

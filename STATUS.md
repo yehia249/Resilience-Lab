@@ -1,22 +1,26 @@
 # Delivery status
 
-Updated 2026-11-01. Scope is local Docker Compose + k3d and public recorded replay on GitHub Pages. No cloud infrastructure or account setup.
+Updated 2026-11-01. The backend runs locally; the public frontend is clearly labelled Replay on GitHub Pages. No cloud account or infrastructure is required.
 
-Verified:
+| Milestone                                             | Delivery                                                                                                  |
+| ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| M0–M1: workspace, contracts and resilience primitives | TypeScript monorepo, shared zod schemas, tested breaker/retry/bulkhead/recovery                           |
+| M2–M4: real services, observability and faults        | Postgres, Redis Streams, idempotent durable orders, bounded fault controller, Prometheus, OTel and Jaeger |
+| M5: dashboard                                         | Live and Replay, responsive light/dark UI, service map, chart, waterfall, shop, events and recovery       |
+| M6: local Kubernetes                                  | k3d, HPA, narrow fault RBAC, network policies, readiness and recovery checks                              |
+| M7: cloud                                             | Removed at the user's request                                                                             |
+| M8: measurements and public frontend                  | At least 40 actual captures, measured load tests, GitHub Pages workflow, reports and walkthrough          |
 
-- Separate real services, durable Postgres orders, Redis Streams, bounded faults and OpenTelemetry/Prometheus.
-- Compose smoke and all four fault integration checks; measured output in docs/benchmarks/integration.json.
-- Local k3d smoke, real HPA scaling and payment-kill/recovery browser checks.
-- CI at e35f7d9 passed source, both container scans, Compose integration, k3d recovery/HPA E2E and Kubernetes schema validation.
-- Replay browser test passed: all four fault mappings, captured checkout, zero backend calls, responsive layout and axe accessibility in both themes.
-- Published Pages replay passed the browser test against the public URL.
-- Desktop Lighthouse: 94 Performance, 99 Accessibility; raw HTML and JSON reports in docs/benchmarks/.
-- Real recording campaign is running; docs/benchmarks/results.json is the current measured count and summary.
+Public site: https://yehia249.github.io/Resilience-Lab/. Source: https://github.com/yehia249/Resilience-Lab.
 
-Remaining:
+Evidence:
 
-- Finish ten real captures per fault and validate the full dataset.
-- Collect baseline/spike/one-hour soak results from the isolated Compose CI run.
-- Verify CI again for the latest replay and runtime image changes.
+- The recording indexes contain actual capture counts. Full validation requires at least ten runs per fault and checks public files against the raw evidence.
+- docs/benchmarks/REPORT.md and analysis.json derive fault statistics from the saved runs.
+- docs/benchmarks/load/ contains completed baseline, spike and one-hour soak outputs with separate CI provenance. The soak recorded 90,000 catalog requests, zero HTTP failures and 23.884 ms p95.
+- docs/benchmarks/local-smoke-latest.json contains actual local shop/SSE/trace verification. Historical and later runtime artifacts are distinguished in PROVENANCE.md.
+- Lighthouse reports retain measured desktop results, including earlier slower runs. They measure the static public frontend.
 
-No full benchmark completion, live public backend or cloud deployment is claimed. Runtime provenance is recorded separately from recorder source revision.
+[CI runs](https://github.com/yehia249/Resilience-Lab/actions) identify exact tested commits. Gates include lint, types, 12 unit/contract tests, dependency/secret/container scans, Compose fault/queue/idempotency checks, k3d recovery/HPA E2E and Kubernetes schema validation. Pages separately validates the complete dataset and browser-tests Replay with no backend calls.
+
+Historical measurements are never relabelled as a newer build. The payment processor is simulated; requests, SQL, queues, faults and captured timings are real. A single local node provides no host-level high availability.

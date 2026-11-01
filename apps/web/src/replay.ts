@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import {
+import type {
   Recording,
   RecordingIndex,
-  type RecordingSummary,
+  RecordingSummary,
 } from '../../../packages/common/src/recordings';
+import { loadReplayData } from './replay-loader';
 import type { FaultType } from '../../../packages/common/src/schemas';
 const base = import.meta.env.BASE_URL;
 export function useReplay(enabled: boolean) {
@@ -21,9 +22,7 @@ export function useReplay(enabled: boolean) {
     setLoading(true);
     setError('');
     try {
-      const response = await fetch(base + summary.file);
-      if (!response.ok) throw Error('Recording file unavailable');
-      const data = Recording.parse(await response.json());
+      const data = await loadReplayData<Recording>(base + summary.file, 'recording');
       if (version !== requestVersion.current) return;
       setRecording(data);
       setPosition(0);
@@ -40,13 +39,8 @@ export function useReplay(enabled: boolean) {
       return;
     }
     let active = true;
-    void fetch(base + 'recordings/index.json')
-      .then((r) => {
-        if (!r.ok) throw Error('Real recordings are still being captured');
-        return r.json();
-      })
-      .then((data) => {
-        const parsed = RecordingIndex.parse(data);
+    void loadReplayData<RecordingIndex>(base + 'recordings/index.json', 'index')
+      .then((parsed) => {
         if (!active) return;
         setIndex(parsed);
         const latest =

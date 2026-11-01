@@ -13,3 +13,7 @@ One spike attempt was interrupted by concurrent Compose build/start contention; 
 Success statistics describe completed recoveries only. They are not an experiment success-rate estimate. Sample p95 uses the nearest-rank estimator; with ten runs it is the largest observed recovery. One-second polling can miss a brief payment fault slot. For that case the accepted fault request and actual trace errors establish the experiment, without inserting synthetic snapshots.
 
 The load-test workflow uses another real Docker Compose system inside an existing GitHub Actions runner. Its measurements have separate provenance and must not be described as workstation k3d throughput. Lighthouse measures the public static replay page, not backend performance.
+
+The initial campaign predates fixes for duplicate HTTP traceparent injection and readiness-based kill clearance before acknowledgement. Captured gateway/worker spans remain genuine, but some earlier HTTP traces are not joined across all services. Later runtime verification requires a single checkout trace containing gateway, cart, catalog and payment. No historical span or active-fault frame is inserted to conceal these limits.
+
+Histogram request quantiles that reach 5,000 ms are at the last finite histogram bucket. They are estimates and do not prove that every request finished within five seconds.

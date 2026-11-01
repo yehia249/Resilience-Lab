@@ -1,9 +1,6 @@
 name: Measured Compose load tests
 on:
   workflow_dispatch:
-  push:
-    branches: [main, feat/resilience-lab]
-    paths: ['loadtests/**', '.github/workflows/load.yml']
 permissions: { contents: read }
 concurrency: { group: load-experiments, cancel-in-progress: false }
 jobs:
