@@ -11,7 +11,7 @@ async function request(path: string, method = 'GET', body?: unknown) {
     signal: AbortSignal.timeout(10000),
   });
   if (!r.ok) throw Error(`${path}: ${r.status} ${await r.text()}`);
-  if (path === '/api/checkout') checkoutTraceId = r.headers.get('x-trace-id');
+  if (path === '/api/checkout' && !checkoutTraceId) checkoutTraceId = r.headers.get('x-trace-id');
   return r.json();
 }
 const products = Product.array().parse(await request('/api/products'));
@@ -50,20 +50,28 @@ while (snapshots < 2) {
 }
 await reader.cancel();
 let traceSpans: number | null = null;
+let traceServices: string[] | null = null;
 if (process.env.JAEGER_URL) {
   for (let attempt = 0; attempt < 20; attempt++) {
     const r = await fetch(process.env.JAEGER_URL + '/api/traces/' + checkoutTraceId, {
       signal: AbortSignal.timeout(5000),
     });
-    const data = (await r.json()) as { data?: { spans?: unknown[] }[] };
+    const data = (await r.json()) as {
+      data?: { spans?: unknown[]; processes?: Record<string, { serviceName: string }> }[];
+    };
     const count = data.data?.[0]?.spans?.length ?? 0;
-    if (count > 0) {
+    const services = [
+      ...new Set(Object.values(data.data?.[0]?.processes ?? {}).map((p) => p.serviceName)),
+    ];
+    if (count > 0 && services.includes('gateway') && services.length >= 2) {
       traceSpans = count;
+      traceServices = services;
       break;
     }
     await new Promise((resolve) => setTimeout(resolve, 1000));
   }
-  if (!traceSpans) throw Error('No actual checkout spans reached Jaeger');
+  if (!traceSpans)
+    throw Error('No distributed checkout trace reached Jaeger across multiple services');
 }
 console.log(
   JSON.stringify(
@@ -75,6 +83,7 @@ console.log(
       telemetryTs: snapshot.ts,
       liveSseSnapshots: snapshots,
       traceSpans,
+      traceServices,
       measuredAt: new Date().toISOString(),
     },
     null,
