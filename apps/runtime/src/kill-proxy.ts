@@ -2,6 +2,15 @@ import { server } from './platform';
 import { kube, tokenMatches } from './chaos';
 export async function killProxy() {
   const { app, listen } = await server(8099);
+  app.get('/status', async (req, reply) => {
+    if (!tokenMatches(req.headers['x-internal-token'], process.env.INTERNAL_TOKEN))
+      return reply.code(403).send({ error: 'Forbidden' });
+    const deployment = (await kube('/apis/apps/v1/namespaces/lab-payment/deployments/payment')) as {
+      spec: { replicas: number };
+      status: { readyReplicas?: number };
+    };
+    return { ready: deployment.status.readyReplicas ?? 0, desired: deployment.spec.replicas };
+  });
   app.post('/kill-payment', async (req, reply) => {
     if (!tokenMatches(req.headers['x-internal-token'], process.env.INTERNAL_TOKEN))
       return reply.code(403).send({ error: 'Forbidden' });

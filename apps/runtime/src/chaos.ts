@@ -177,10 +177,22 @@ redis.call('SET',KEYS[1],ARGV[2],'PX',ARGV[3]);redis.call('INCR',KEYS[3]);if red
       let recovered = false;
       if (f.type === 'KILL_PAYMENT') {
         try {
-          const res = await fetch((process.env.PAYMENT_URL ?? 'http://payment:8083') + '/readyz', {
-            signal: AbortSignal.timeout(750),
-          });
-          recovered = res.ok;
+          if (process.env.CHAOS_ADAPTER === 'kubernetes') {
+            const url = process.env.POD_KILL_PROXY_URL?.replace(/\/kill-payment$/, '/status');
+            if (!url) throw Error('Missing proxy');
+            const res = await fetch(url, {
+              headers: { 'x-internal-token': process.env.INTERNAL_TOKEN ?? '' },
+              signal: AbortSignal.timeout(750),
+            });
+            const status = (await res.json()) as { ready: number; desired: number };
+            recovered = res.ok && status.desired > 0 && status.ready === status.desired;
+          } else {
+            const res = await fetch(
+              (process.env.PAYMENT_URL ?? 'http://payment:8083') + '/readyz',
+              { signal: AbortSignal.timeout(750) },
+            );
+            recovered = res.ok;
+          }
         } catch {
           /* still restarting */
         }

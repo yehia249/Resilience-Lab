@@ -1901,6 +1901,14 @@ rules:
     verbs:
       - list
       - delete
+  - apiGroups:
+      - apps
+    resources:
+      - deployments
+    resourceNames:
+      - payment
+    verbs:
+      - get
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding

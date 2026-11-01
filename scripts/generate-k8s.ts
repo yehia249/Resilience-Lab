@@ -404,7 +404,17 @@ add('ServiceAccount', 'payment-killer', {}, 'lab-payment');
 add(
   'Role',
   'payment-killer',
-  { rules: [{ apiGroups: [''], resources: ['pods'], verbs: ['list', 'delete'] }] },
+  {
+    rules: [
+      { apiGroups: [''], resources: ['pods'], verbs: ['list', 'delete'] },
+      {
+        apiGroups: ['apps'],
+        resources: ['deployments'],
+        resourceNames: ['payment'],
+        verbs: ['get'],
+      },
+    ],
+  },
   'lab-payment',
   'rbac.authorization.k8s.io/v1',
 );
