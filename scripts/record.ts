@@ -383,3 +383,4 @@ for (let round = 0; round < repeats; round++)
     }
   }
 console.log('All required recordings complete.');
+await import('./analyze-recordings');
