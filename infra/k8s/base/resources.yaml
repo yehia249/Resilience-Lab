@@ -1,0 +1,3079 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: lab
+  labels:
+    kubernetes.io/metadata.name: lab
+    pod-security.kubernetes.io/enforce: baseline
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: lab-payment
+  labels:
+    kubernetes.io/metadata.name: lab-payment
+    pod-security.kubernetes.io/enforce: baseline
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: lab-config
+  namespace: lab
+data:
+  REDIS_URL: redis://redis.lab.svc.cluster.local:6379
+  SITE_ORIGIN: https://REPLACE_HOST
+  CHAOS_ENABLED: "true"
+  CHAOS_ADAPTER: kubernetes
+  OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector.lab.svc.cluster.local:4318
+  POD_KILL_PROXY_URL: http://pod-kill-proxy.lab-payment.svc.cluster.local:8099/kill-payment
+  TRUST_PROXY: "true"
+  BASELINE_RPS: "25"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: lab-config
+  namespace: lab-payment
+data:
+  REDIS_URL: redis://redis.lab.svc.cluster.local:6379
+  SITE_ORIGIN: https://REPLACE_HOST
+  CHAOS_ENABLED: "true"
+  CHAOS_ADAPTER: kubernetes
+  OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector.lab.svc.cluster.local:4318
+  POD_KILL_PROXY_URL: http://pod-kill-proxy.lab-payment.svc.cluster.local:8099/kill-payment
+  TRUST_PROXY: "true"
+  BASELINE_RPS: "25"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init
+  namespace: lab
+data:
+  init.sql: |
+    CREATE TABLE IF NOT EXISTS products(id uuid PRIMARY KEY,name text NOT NULL,price integer NOT NULL CHECK(price>0),icon text NOT NULL);
+    CREATE TABLE IF NOT EXISTS orders(id uuid PRIMARY KEY,idempotency_key uuid UNIQUE NOT NULL,cart_id uuid NOT NULL,amount integer NOT NULL,status text NOT NULL CHECK(status IN ('processing','queued','confirmed','failed')),attempts integer NOT NULL DEFAULT 0,trace_context jsonb NOT NULL DEFAULT '{}',created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz NOT NULL DEFAULT now());
+    CREATE INDEX IF NOT EXISTS orders_pending ON orders(updated_at) WHERE status IN ('queued','processing');
+    CREATE TABLE IF NOT EXISTS payments(idempotency_key uuid PRIMARY KEY,order_id uuid NOT NULL,amount integer NOT NULL,result jsonb NOT NULL,created_at timestamptz NOT NULL DEFAULT now());
+    CREATE TABLE IF NOT EXISTS recoveries(id bigserial PRIMARY KEY,fault_id uuid UNIQUE NOT NULL,fault_type text NOT NULL,duration double precision NOT NULL,peak_p95 double precision NOT NULL,peak_error_rate double precision NOT NULL,created_at timestamptz NOT NULL DEFAULT now());
+    INSERT INTO products(id,name,price,icon) SELECT ('00000000-0000-4000-8000-'||lpad(n::text,12,'0'))::uuid,name,price,icon FROM (VALUES
+    (1,'Mechanical Keyboard',8900,'⌨'),(2,'Wireless Mouse',3900,'↖'),(3,'Studio Monitor',24900,'▣'),(4,'USB-C Hub',4900,'⊞'),(5,'Desk Light',3500,'◒'),(6,'Headphones',7900,'♫'),(7,'Webcam',5900,'◉'),(8,'Microphone',9900,'♩'),(9,'Laptop Stand',4500,'△'),(10,'Desk Mat',1900,'▱'),(11,'SSD Drive',8900,'▤'),(12,'USB Cable',1200,'∿'),(13,'Ergonomic Chair',29900,'♧'),(14,'Standing Desk',39900,'⊓'),(15,'Notebook',900,'▥'),(16,'Pen Set',1400,'✎'),(17,'Screen Bar',6900,'━'),(18,'Speakers',12900,'◖'),(19,'Trackpad',9900,'□'),(20,'Wrist Rest',2400,'▰'),(21,'Cable Clips',800,'⌁'),(22,'Desk Shelf',5900,'Π'),(23,'Charging Pad',2900,'◎'),(24,'Monitor Arm',7900,'⌐')) AS seed(n,name,price,icon) ON CONFLICT DO NOTHING;
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: web-config
+  namespace: lab
+data:
+  default.conf: >
+    server {
+      listen 8088;
+      set_real_ip_from 10.42.0.0/16;
+      real_ip_header X-Forwarded-For;
+      real_ip_recursive on;
+      root /usr/share/nginx/html;
+      access_log off;
+      error_log /dev/null crit;
+      resolver 10.43.0.10 valid=5s ipv6=off;
+      add_header X-Content-Type-Options nosniff always;
+      add_header Referrer-Policy strict-origin-when-cross-origin always;
+      add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'" always;
+      location /api/ { set $backend http://gateway.lab.svc.cluster.local:8080; proxy_pass $backend; proxy_set_header X-Real-IP $remote_addr; proxy_set_header X-Forwarded-For $remote_addr; }
+      location /v1/ { set $telemetry http://telemetry-api.lab.svc.cluster.local:8095; proxy_pass $telemetry; proxy_buffering off; proxy_read_timeout 3600s; }
+      location / { try_files $uri $uri/ /index.html; }
+    }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: lab
+data:
+  prometheus.yml: >
+    global:
+      scrape_interval: 2s
+      evaluation_interval: 2s
+    scrape_configs:
+      - job_name: services
+        kubernetes_sd_configs:
+          - role: pod
+            namespaces:
+              names:
+                - lab
+                - lab-payment
+        relabel_configs:
+          - source_labels:
+              - __meta_kubernetes_pod_label_app
+            action: keep
+            regex: gateway|catalog|cart|payment|order-worker|chaos-controller|traffic-generator|telemetry-api
+          - source_labels:
+              - __meta_kubernetes_pod_label_app
+            target_label: service
+          - source_labels:
+              - __meta_kubernetes_pod_phase
+            action: keep
+            regex: Running
+      - job_name: otel
+        static_configs:
+          - targets:
+              - otel-metrics:8889
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-config
+  namespace: lab
+data:
+  otel.yaml: >
+    receivers:
+      otlp:
+        protocols:
+          grpc: {endpoint: '0.0.0.0:4317'}
+          http: {endpoint: '0.0.0.0:4318'}
+    processors:
+      memory_limiter: {check_interval: 1s, limit_mib: 180, spike_limit_mib: 30}
+      batch: {timeout: 1s, send_batch_size: 512}
+    exporters:
+      otlp/jaeger: {endpoint: 'jaeger-otlp:4317', tls: {insecure: true}}
+      prometheus: {endpoint: '0.0.0.0:8889'}
+    service:
+      pipelines:
+        traces: {receivers: [otlp], processors: [memory_limiter, batch], exporters: [otlp/jaeger]}
+        metrics: {receivers: [otlp], processors: [memory_limiter, batch], exporters: [prometheus]}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway
+  namespace: lab
+  labels:
+    app: gateway
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: gateway
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: gateway
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+        - name: gateway
+          image: ghcr.io/yehia249/resilience-lab-service:main
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 400m
+              memory: 256Mi
+          envFrom:
+            - configMapRef:
+                name: lab-config
+            - secretRef:
+                name: lab-secrets
+          env:
+            - name: SERVICE
+              value: gateway
+            - name: PORT
+              value: "8080"
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 25
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 6
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            failureThreshold: 60
+            periodSeconds: 5
+            timeoutSeconds: 3
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gateway
+  namespace: lab
+spec:
+  selector:
+    app: gateway
+  ports:
+    - port: 8080
+      targetPort: 8080
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: gateway
+  namespace: lab
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: gateway
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: catalog
+  namespace: lab
+  labels:
+    app: catalog
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: catalog
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: catalog
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+        - name: catalog
+          image: ghcr.io/yehia249/resilience-lab-service:main
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8081
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 300m
+              memory: 256Mi
+          envFrom:
+            - configMapRef:
+                name: lab-config
+            - secretRef:
+                name: lab-secrets
+          env:
+            - name: SERVICE
+              value: catalog
+            - name: PORT
+              value: "8081"
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8081
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8081
+            initialDelaySeconds: 25
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 6
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: 8081
+            failureThreshold: 60
+            periodSeconds: 5
+            timeoutSeconds: 3
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: catalog
+  namespace: lab
+spec:
+  selector:
+    app: catalog
+  ports:
+    - port: 8081
+      targetPort: 8081
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: catalog
+  namespace: lab
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: catalog
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cart
+  namespace: lab
+  labels:
+    app: cart
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cart
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: cart
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+        - name: cart
+          image: ghcr.io/yehia249/resilience-lab-service:main
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8082
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+          resources:
+            requests:
+              cpu: 50m
+              memory: 96Mi
+            limits:
+              cpu: 200m
+              memory: 192Mi
+          envFrom:
+            - configMapRef:
+                name: lab-config
+            - secretRef:
+                name: lab-secrets
+          env:
+            - name: SERVICE
+              value: cart
+            - name: PORT
+              value: "8082"
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8082
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8082
+            initialDelaySeconds: 25
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 6
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: 8082
+            failureThreshold: 60
+            periodSeconds: 5
+            timeoutSeconds: 3
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cart
+  namespace: lab
+spec:
+  selector:
+    app: cart
+  ports:
+    - port: 8082
+      targetPort: 8082
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: cart
+  namespace: lab
+spec:
+  minAvailable: 0
+  selector:
+    matchLabels:
+      app: cart
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payment
+  namespace: lab-payment
+  labels:
+    app: payment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: payment
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: payment
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+        - name: payment
+          image: ghcr.io/yehia249/resilience-lab-service:main
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8083
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 300m
+              memory: 256Mi
+          envFrom:
+            - configMapRef:
+                name: lab-config
+            - secretRef:
+                name: lab-secrets
+          env:
+            - name: SERVICE
+              value: payment
+            - name: PORT
+              value: "8083"
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8083
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8083
+            initialDelaySeconds: 25
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 6
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: 8083
+            failureThreshold: 60
+            periodSeconds: 5
+            timeoutSeconds: 3
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: payment
+  namespace: lab-payment
+spec:
+  selector:
+    app: payment
+  ports:
+    - port: 8083
+      targetPort: 8083
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: payment
+  namespace: lab-payment
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: payment
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order-worker
+  namespace: lab
+  labels:
+    app: order-worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: order-worker
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: order-worker
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+        - name: order-worker
+          image: ghcr.io/yehia249/resilience-lab-service:main
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8084
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+          resources:
+            requests:
+              cpu: 50m
+              memory: 96Mi
+            limits:
+              cpu: 200m
+              memory: 192Mi
+          envFrom:
+            - configMapRef:
+                name: lab-config
+            - secretRef:
+                name: lab-secrets
+          env:
+            - name: SERVICE
+              value: order-worker
+            - name: PORT
+              value: "8084"
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8084
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8084
+            initialDelaySeconds: 25
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 6
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: 8084
+            failureThreshold: 60
+            periodSeconds: 5
+            timeoutSeconds: 3
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: order-worker
+  namespace: lab
+spec:
+  selector:
+    app: order-worker
+  ports:
+    - port: 8084
+      targetPort: 8084
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: order-worker
+  namespace: lab
+spec:
+  minAvailable: 0
+  selector:
+    matchLabels:
+      app: order-worker
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chaos-controller
+  namespace: lab
+  labels:
+    app: chaos-controller
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chaos-controller
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: chaos-controller
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+        - name: chaos-controller
+          image: ghcr.io/yehia249/resilience-lab-service:main
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8090
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+          resources:
+            requests:
+              cpu: 20m
+              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+          envFrom:
+            - configMapRef:
+                name: lab-config
+            - secretRef:
+                name: lab-secrets
+          env:
+            - name: SERVICE
+              value: chaos-controller
+            - name: PORT
+              value: "8090"
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8090
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8090
+            initialDelaySeconds: 25
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 6
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: 8090
+            failureThreshold: 60
+            periodSeconds: 5
+            timeoutSeconds: 3
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: chaos-controller
+  namespace: lab
+spec:
+  selector:
+    app: chaos-controller
+  ports:
+    - port: 8090
+      targetPort: 8090
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: chaos-controller
+  namespace: lab
+spec:
+  minAvailable: 0
+  selector:
+    matchLabels:
+      app: chaos-controller
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: traffic-generator
+  namespace: lab
+  labels:
+    app: traffic-generator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: traffic-generator
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: traffic-generator
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+        - name: traffic-generator
+          image: ghcr.io/yehia249/resilience-lab-service:main
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8091
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 300m
+              memory: 256Mi
+          envFrom:
+            - configMapRef:
+                name: lab-config
+            - secretRef:
+                name: lab-secrets
+          env:
+            - name: SERVICE
+              value: traffic-generator
+            - name: PORT
+              value: "8091"
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8091
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8091
+            initialDelaySeconds: 25
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 6
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: 8091
+            failureThreshold: 60
+            periodSeconds: 5
+            timeoutSeconds: 3
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: traffic-generator
+  namespace: lab
+spec:
+  selector:
+    app: traffic-generator
+  ports:
+    - port: 8091
+      targetPort: 8091
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: traffic-generator
+  namespace: lab
+spec:
+  minAvailable: 0
+  selector:
+    matchLabels:
+      app: traffic-generator
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: telemetry-api
+  namespace: lab
+  labels:
+    app: telemetry-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: telemetry-api
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: telemetry-api
+    spec:
+      automountServiceAccountToken: true
+      serviceAccountName: telemetry
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+        - name: telemetry-api
+          image: ghcr.io/yehia249/resilience-lab-service:main
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8095
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 300m
+              memory: 256Mi
+          envFrom:
+            - configMapRef:
+                name: lab-config
+            - secretRef:
+                name: lab-secrets
+          env:
+            - name: SERVICE
+              value: telemetry-api
+            - name: PORT
+              value: "8095"
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8095
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8095
+            initialDelaySeconds: 25
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 6
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: 8095
+            failureThreshold: 60
+            periodSeconds: 5
+            timeoutSeconds: 3
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: telemetry-api
+  namespace: lab
+spec:
+  selector:
+    app: telemetry-api
+  ports:
+    - port: 8095
+      targetPort: 8095
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: telemetry-api
+  namespace: lab
+spec:
+  minAvailable: 0
+  selector:
+    matchLabels:
+      app: telemetry-api
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: payment
+  namespace: lab
+spec:
+  type: ExternalName
+  externalName: payment.lab-payment.svc.cluster.local
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: gateway
+  namespace: lab
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: gateway
+  minReplicas: 2
+  maxReplicas: 5
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 60
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+        - type: Pods
+          value: 2
+          periodSeconds: 15
+    scaleDown:
+      stabilizationWindowSeconds: 120
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 30
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: catalog
+  namespace: lab
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: catalog
+  minReplicas: 2
+  maxReplicas: 4
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 60
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+        - type: Pods
+          value: 2
+          periodSeconds: 15
+    scaleDown:
+      stabilizationWindowSeconds: 120
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 30
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: cart
+  namespace: lab
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: cart
+  minReplicas: 1
+  maxReplicas: 3
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 60
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+        - type: Pods
+          value: 2
+          periodSeconds: 15
+    scaleDown:
+      stabilizationWindowSeconds: 120
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 30
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: payment
+  namespace: lab-payment
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: payment
+  minReplicas: 2
+  maxReplicas: 4
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 60
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+        - type: Pods
+          value: 2
+          periodSeconds: 15
+    scaleDown:
+      stabilizationWindowSeconds: 120
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 30
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres
+  namespace: lab
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: local-path
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis
+  namespace: lab
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: local-path
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: prometheus
+  namespace: lab
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 3Gi
+  storageClassName: local-path
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: lab
+  labels:
+    app: postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 70
+        fsGroup: 70
+      containers:
+        - name: postgres
+          image: postgres:16.11-alpine
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5432
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          env:
+            - name: POSTGRES_USER
+              value: lab
+            - name: POSTGRES_DB
+              value: lab
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: lab-secrets
+                  key: POSTGRES_PASSWORD
+          readinessProbe:
+            exec: &a1
+              command:
+                - pg_isready
+                - -h
+                - 127.0.0.1
+                - -U
+                - lab
+                - -d
+                - lab
+            periodSeconds: 5
+            timeoutSeconds: 3
+          livenessProbe:
+            exec: *a1
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 6
+          startupProbe:
+            exec: *a1
+            periodSeconds: 5
+            failureThreshold: 60
+            timeoutSeconds: 3
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: data
+              mountPath: /var/lib/postgresql/data
+            - name: init
+              mountPath: /docker-entrypoint-initdb.d
+            - name: tmp
+              mountPath: /var/run/postgresql
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: data
+          persistentVolumeClaim:
+            claimName: postgres
+        - name: init
+          configMap:
+            name: postgres-init
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: lab
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: lab
+  labels:
+    app: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        fsGroup: 999
+      containers:
+        - name: redis
+          image: redis:7.4.6-alpine
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 6379
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+          env:
+            - name: SERVICE
+              value: redis
+            - name: PORT
+              value: "6379"
+          args:
+            - redis-server
+            - --appendonly
+            - yes
+            - --maxmemory
+            - 80mb
+            - --maxmemory-policy
+            - noeviction
+          readinessProbe:
+            exec: &a1
+              command:
+                - redis-cli
+                - ping
+            periodSeconds: 5
+            timeoutSeconds: 3
+          livenessProbe:
+            exec: *a1
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 6
+          startupProbe:
+            exec: *a1
+            periodSeconds: 5
+            failureThreshold: 60
+            timeoutSeconds: 3
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: data
+              mountPath: /data
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: data
+          persistentVolumeClaim:
+            claimName: redis
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: lab
+spec:
+  selector:
+    app: redis
+  ports:
+    - port: 6379
+      targetPort: 6379
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus
+  namespace: lab
+  labels:
+    app: prometheus
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: prometheus
+    spec:
+      automountServiceAccountToken: true
+      serviceAccountName: prometheus
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        fsGroup: 65534
+      containers:
+        - name: prometheus
+          image: prom/prometheus:v3.7.2
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 9090
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+          resources:
+            requests:
+              cpu: 200m
+              memory: 512Mi
+            limits:
+              cpu: 500m
+              memory: 768Mi
+          env:
+            - name: SERVICE
+              value: prometheus
+            - name: PORT
+              value: "9090"
+          args:
+            - --config.file=/etc/prometheus/prometheus.yml
+            - --storage.tsdb.retention.time=6h
+            - --storage.tsdb.retention.size=2GB
+          readinessProbe:
+            httpGet: &a1
+              path: /-/ready
+              port: 9090
+            periodSeconds: 5
+            timeoutSeconds: 3
+          livenessProbe:
+            httpGet: *a1
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 6
+          startupProbe:
+            httpGet: *a1
+            periodSeconds: 5
+            failureThreshold: 60
+            timeoutSeconds: 3
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: config
+              mountPath: /etc/prometheus
+            - name: data
+              mountPath: /prometheus
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: config
+          configMap:
+            name: prometheus-config
+        - name: data
+          persistentVolumeClaim:
+            claimName: prometheus
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus
+  namespace: lab
+spec:
+  selector:
+    app: prometheus
+  ports:
+    - port: 9090
+      targetPort: 9090
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jaeger
+  namespace: lab
+  labels:
+    app: jaeger
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jaeger
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: jaeger
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        fsGroup: 10001
+      containers:
+        - name: jaeger
+          image: jaegertracing/all-in-one:1.76.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 16686
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 300m
+              memory: 512Mi
+          env:
+            - name: COLLECTOR_OTLP_ENABLED
+              value: "true"
+            - name: MEMORY_MAX_TRACES
+              value: "20000"
+          readinessProbe:
+            httpGet: &a1
+              path: /
+              port: 14269
+            periodSeconds: 5
+            timeoutSeconds: 3
+          livenessProbe:
+            httpGet: *a1
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 6
+          startupProbe:
+            httpGet: *a1
+            periodSeconds: 5
+            failureThreshold: 60
+            timeoutSeconds: 3
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jaeger
+  namespace: lab
+spec:
+  selector:
+    app: jaeger
+  ports:
+    - port: 16686
+      targetPort: 16686
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jaeger-otlp
+  namespace: lab
+spec:
+  selector:
+    app: jaeger
+  ports:
+    - port: 4317
+      targetPort: 4317
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otel-collector
+  namespace: lab
+  labels:
+    app: otel-collector
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: otel-collector
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: otel-collector
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        fsGroup: 10001
+      containers:
+        - name: otel-collector
+          image: otel/opentelemetry-collector-contrib:0.139.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 4318
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+          env:
+            - name: SERVICE
+              value: otel-collector
+            - name: PORT
+              value: "4318"
+          args:
+            - --config=/etc/otel/otel.yaml
+          readinessProbe:
+            tcpSocket: &a1
+              port: 4318
+            periodSeconds: 5
+            timeoutSeconds: 3
+          livenessProbe:
+            tcpSocket: *a1
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 6
+          startupProbe:
+            tcpSocket: *a1
+            periodSeconds: 5
+            failureThreshold: 60
+            timeoutSeconds: 3
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: config
+              mountPath: /etc/otel
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: config
+          configMap:
+            name: otel-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: otel-collector
+  namespace: lab
+spec:
+  selector:
+    app: otel-collector
+  ports:
+    - port: 4318
+      targetPort: 4318
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: otel-metrics
+  namespace: lab
+spec:
+  selector:
+    app: otel-collector
+  ports:
+    - port: 8889
+      targetPort: 8889
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: prometheus
+  namespace: lab
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: prometheus-read
+  namespace: lab
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+    verbs:
+      - get
+      - list
+      - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: prometheus-read
+  namespace: lab
+subjects:
+  - kind: ServiceAccount
+    name: prometheus
+    namespace: lab
+roleRef:
+  kind: Role
+  name: prometheus-read
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: prometheus-read
+  namespace: lab-payment
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+    verbs:
+      - get
+      - list
+      - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: prometheus-read
+  namespace: lab-payment
+subjects:
+  - kind: ServiceAccount
+    name: prometheus
+    namespace: lab
+roleRef:
+  kind: Role
+  name: prometheus-read
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+  namespace: lab
+  labels:
+    app: web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: web
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101
+        fsGroup: 101
+      containers:
+        - name: web
+          image: ghcr.io/yehia249/resilience-lab-web:main
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8088
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+          resources:
+            requests:
+              cpu: 20m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi
+          env:
+            - name: SERVICE
+              value: web
+            - name: PORT
+              value: "8088"
+          readinessProbe:
+            httpGet: &a1
+              path: /
+              port: 8088
+            periodSeconds: 5
+            timeoutSeconds: 3
+          livenessProbe:
+            httpGet: *a1
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 6
+          startupProbe:
+            httpGet: *a1
+            periodSeconds: 5
+            failureThreshold: 60
+            timeoutSeconds: 3
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: config
+              mountPath: /etc/nginx/conf.d
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: config
+          configMap:
+            name: web-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+  namespace: lab
+spec:
+  selector:
+    app: web
+  ports:
+    - port: 8088
+      targetPort: 8088
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pod-kill-proxy
+  namespace: lab-payment
+  labels:
+    app: pod-kill-proxy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pod-kill-proxy
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: pod-kill-proxy
+    spec:
+      automountServiceAccountToken: true
+      serviceAccountName: payment-killer
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+        - name: pod-kill-proxy
+          image: ghcr.io/yehia249/resilience-lab-service:main
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8099
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+          resources:
+            requests:
+              cpu: 10m
+              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+          envFrom:
+            - configMapRef:
+                name: lab-config
+            - secretRef:
+                name: lab-secrets
+          env:
+            - name: SERVICE
+              value: pod-kill-proxy
+            - name: PORT
+              value: "8099"
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8099
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8099
+            initialDelaySeconds: 25
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 6
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: 8099
+            failureThreshold: 60
+            periodSeconds: 5
+            timeoutSeconds: 3
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pod-kill-proxy
+  namespace: lab-payment
+spec:
+  selector:
+    app: pod-kill-proxy
+  ports:
+    - port: 8099
+      targetPort: 8099
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: payment-killer
+  namespace: lab-payment
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: payment-killer
+  namespace: lab-payment
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+    verbs:
+      - list
+      - delete
+  - apiGroups:
+      - apps
+    resources:
+      - deployments
+    resourceNames:
+      - payment
+    verbs:
+      - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: payment-killer
+  namespace: lab-payment
+subjects:
+  - kind: ServiceAccount
+    name: payment-killer
+    namespace: lab-payment
+roleRef:
+  kind: Role
+  name: payment-killer
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: telemetry
+  namespace: lab
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: telemetry-read
+  namespace: lab
+rules:
+  - apiGroups:
+      - apps
+    resources:
+      - deployments
+    verbs:
+      - get
+      - list
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+      - events
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - metrics.k8s.io
+    resources:
+      - pods
+    verbs:
+      - get
+      - list
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: telemetry-read
+  namespace: lab
+subjects:
+  - kind: ServiceAccount
+    name: telemetry
+    namespace: lab
+roleRef:
+  kind: Role
+  name: telemetry-read
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: telemetry-read
+  namespace: lab-payment
+rules:
+  - apiGroups:
+      - apps
+    resources:
+      - deployments
+    verbs:
+      - get
+      - list
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+      - events
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - metrics.k8s.io
+    resources:
+      - pods
+    verbs:
+      - get
+      - list
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: telemetry-read
+  namespace: lab-payment
+subjects:
+  - kind: ServiceAccount
+    name: telemetry
+    namespace: lab
+roleRef:
+  kind: Role
+  name: telemetry-read
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+  namespace: lab
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: dns
+  namespace: lab
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+  namespace: lab-payment
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: dns
+  namespace: lab-payment
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: web-api-out
+  namespace: lab
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - web
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: lab
+          podSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values:
+                  - gateway
+                  - telemetry-api
+      ports:
+        - port: 8080
+        - port: 8095
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: web-api-in
+  namespace: lab
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - gateway
+          - telemetry-api
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: lab
+          podSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values:
+                  - web
+      ports:
+        - port: 8080
+        - port: 8095
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: gateway-services-out
+  namespace: lab
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - gateway
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: lab
+          podSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values:
+                  - catalog
+                  - cart
+                  - chaos-controller
+      ports:
+        - port: 8081
+        - port: 8082
+        - port: 8090
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: gateway-services-in
+  namespace: lab
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - catalog
+          - cart
+          - chaos-controller
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: lab
+          podSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values:
+                  - gateway
+      ports:
+        - port: 8081
+        - port: 8082
+        - port: 8090
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: payment-calls-out
+  namespace: lab
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - gateway
+          - order-worker
+          - chaos-controller
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: lab-payment
+          podSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values:
+                  - payment
+      ports:
+        - port: 8083
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: payment-calls-in
+  namespace: lab-payment
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - payment
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: lab
+          podSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values:
+                  - gateway
+                  - order-worker
+                  - chaos-controller
+      ports:
+        - port: 8083
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: kill-proxy-out
+  namespace: lab
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - chaos-controller
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: lab-payment
+          podSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values:
+                  - pod-kill-proxy
+      ports:
+        - port: 8099
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: kill-proxy-in
+  namespace: lab-payment
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - pod-kill-proxy
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: lab
+          podSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values:
+                  - chaos-controller
+      ports:
+        - port: 8099
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: traffic-out
+  namespace: lab
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - traffic-generator
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: lab
+          podSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values:
+                  - gateway
+      ports:
+        - port: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: traffic-in
+  namespace: lab
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - gateway
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: lab
+          podSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values:
+                  - traffic-generator
+      ports:
+        - port: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: data-out
+  namespace: lab
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - gateway
+          - catalog
+          - cart
+          - order-worker
+          - chaos-controller
+          - traffic-generator
+          - telemetry-api
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: lab
+          podSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values:
+                  - postgres
+                  - redis
+      ports:
+        - port: 5432
+        - port: 6379
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: data-in
+  namespace: lab
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - postgres
+          - redis
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: lab
+          podSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values:
+                  - gateway
+                  - catalog
+                  - cart
+                  - order-worker
+                  - chaos-controller
+                  - traffic-generator
+                  - telemetry-api
+      ports:
+        - port: 5432
+        - port: 6379
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: payment-data-out
+  namespace: lab-payment
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - payment
+          - pod-kill-proxy
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: lab
+          podSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values:
+                  - postgres
+                  - redis
+      ports:
+        - port: 5432
+        - port: 6379
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: payment-data-in
+  namespace: lab
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - postgres
+          - redis
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: lab-payment
+          podSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values:
+                  - payment
+                  - pod-kill-proxy
+      ports:
+        - port: 5432
+        - port: 6379
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: otel-out
+  namespace: lab
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - gateway
+          - catalog
+          - cart
+          - payment
+          - order-worker
+          - chaos-controller
+          - traffic-generator
+          - telemetry-api
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: lab
+          podSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values:
+                  - otel-collector
+      ports:
+        - port: 4318
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: otel-in
+  namespace: lab
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - otel-collector
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: lab
+          podSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values:
+                  - gateway
+                  - catalog
+                  - cart
+                  - payment
+                  - order-worker
+                  - chaos-controller
+                  - traffic-generator
+                  - telemetry-api
+      ports:
+        - port: 4318
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: payment-otel-out
+  namespace: lab-payment
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - payment
+          - pod-kill-proxy
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: lab
+          podSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values:
+                  - otel-collector
+      ports:
+        - port: 4318
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: payment-otel-in
+  namespace: lab
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - otel-collector
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: lab-payment
+          podSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values:
+                  - payment
+                  - pod-kill-proxy
+      ports:
+        - port: 4318
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: collector-jaeger-out
+  namespace: lab
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - otel-collector
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: lab
+          podSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values:
+                  - jaeger
+      ports:
+        - port: 4317
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: collector-jaeger-in
+  namespace: lab
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - jaeger
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: lab
+          podSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values:
+                  - otel-collector
+      ports:
+        - port: 4317
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: telemetry-obs-out
+  namespace: lab
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - telemetry-api
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: lab
+          podSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values:
+                  - prometheus
+                  - jaeger
+      ports:
+        - port: 9090
+        - port: 16686
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: telemetry-obs-in
+  namespace: lab
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - prometheus
+          - jaeger
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: lab
+          podSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values:
+                  - telemetry-api
+      ports:
+        - port: 9090
+        - port: 16686
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: prom-scrape-out
+  namespace: lab
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - prometheus
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: lab
+          podSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values:
+                  - gateway
+                  - catalog
+                  - cart
+                  - order-worker
+                  - chaos-controller
+                  - traffic-generator
+                  - telemetry-api
+                  - otel-collector
+      ports:
+        - port: 8080
+        - port: 8081
+        - port: 8082
+        - port: 8084
+        - port: 8090
+        - port: 8091
+        - port: 8095
+        - port: 8889
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: prom-scrape-in
+  namespace: lab
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - gateway
+          - catalog
+          - cart
+          - order-worker
+          - chaos-controller
+          - traffic-generator
+          - telemetry-api
+          - otel-collector
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: lab
+          podSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values:
+                  - prometheus
+      ports:
+        - port: 8080
+        - port: 8081
+        - port: 8082
+        - port: 8084
+        - port: 8090
+        - port: 8091
+        - port: 8095
+        - port: 8889
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: prom-payment-out
+  namespace: lab
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - prometheus
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: lab-payment
+          podSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values:
+                  - payment
+      ports:
+        - port: 8083
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: prom-payment-in
+  namespace: lab-payment
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - payment
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: lab
+          podSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values:
+                  - prometheus
+      ports:
+        - port: 8083
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: ingress-web
+  namespace: lab
+spec:
+  podSelector:
+    matchLabels:
+      app: web
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: traefik
+      ports:
+        - port: 8088
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: kube-api
+  namespace: lab
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - telemetry-api
+          - prometheus
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - ipBlock:
+            cidr: 10.43.0.1/32
+      ports:
+        - port: 443
+        - port: 6443
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: kube-api
+  namespace: lab-payment
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - pod-kill-proxy
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - ipBlock:
+            cidr: 10.43.0.1/32
+      ports:
+        - port: 443
+        - port: 6443
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: web
+  namespace: lab
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: REPLACE_HOST
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: web
+                port:
+                  number: 8088

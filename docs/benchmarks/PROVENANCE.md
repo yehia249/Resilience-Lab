@@ -1,0 +1,19 @@
+# Capture provenance and interruptions
+
+The JSON files contain actual snapshots, checkout results and normalized traces. The runtime Node version was read inside the Kubernetes telemetry deployment. Recorder revision identifies the tool source, not the source commit of a previously built runtime image.
+
+The first four captures recorded the local Docker image identifier available to the initial recorder. Later captures read the running Kubernetes container's imageID directly. The first identifier is not independently verified against the pod's imageID, so it must not be used to assert an exact runtime artifact. This provenance limitation does not replace or change any captured metric.
+
+The same existing local k3d deployment was used throughout the campaign. Infrastructure image updates were tested in a separate CI cluster. Application service faults, observed restarts and shared-host contention are part of the recorded experiments.
+
+After thirty completed captures, a spike exceeded the recovery timeout. Its actual frames are retained under interrupted/. Health-probe budgets were then extended, including Prometheus startup: an observed WAL replay took about eighty seconds and total startup exceeded the previous ninety-second budget. Synthetic traffic was paused during rollout and restored before capture resumed. See capture-config-after-30.json. Earlier and later runs are a heterogeneous operational campaign, not a controlled A/B comparison. The service image was not replaced during this correction.
+
+One spike attempt was interrupted by concurrent Compose build/start contention; see interrupted-build-contention.json. It predates automatic failed-frame persistence and is excluded from completed-run statistics. A later fixture quota reset encountered a transient WSL transport timeout before injecting a fault. The recorder resumed completed files and retried the missing experiment. New interrupted attempts preserve collected frames separately.
+
+Success statistics describe completed recoveries only. They are not an experiment success-rate estimate. Sample p95 uses the nearest-rank estimator; with ten runs it is the largest observed recovery. One-second polling can miss a brief payment fault slot. For that case the accepted fault request and actual trace errors establish the experiment, without inserting synthetic snapshots.
+
+The load-test workflow uses another real Docker Compose system inside an existing GitHub Actions runner. Its measurements have separate provenance and must not be described as workstation k3d throughput. Lighthouse measures the public static replay page, not backend performance.
+
+The initial campaign predates fixes for duplicate HTTP traceparent injection and readiness-based kill clearance before acknowledgement. Captured gateway/worker spans remain genuine, but some earlier HTTP traces are not joined across all services. Later runtime verification requires a single checkout trace containing gateway, cart, catalog and payment. No historical span or active-fault frame is inserted to conceal these limits.
+
+Histogram request quantiles that reach 5,000 ms are at the last finite histogram bucket. They are estimates and do not prove that every request finished within five seconds.

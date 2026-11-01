@@ -1,0 +1,119 @@
+name: CI
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['docs/benchmarks/**', 'apps/web/public/recordings/**']
+  pull_request:
+    paths-ignore: ['docs/benchmarks/**', 'apps/web/public/recordings/**']
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint && pnpm typecheck && pnpm test && pnpm build
+      - run: pnpm audit --audit-level=high
+      - name: Secret scan
+        run: docker run --rm -v "$PWD:/path" zricethezav/gitleaks:v8.28.0 detect --source=/path --no-banner --redact
+  integration:
+    needs: checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: node scripts/setup-env.mjs && docker compose build gateway web && docker compose up -d --wait --wait-timeout 180
+      - run: pnpm smoke
+        env: { JAEGER_URL: 'http://localhost:16686' }
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:e2e
+      - name: Integration fault contracts
+        run: pnpm exec tsx scripts/integration.ts
+      - if: always()
+        run: docker compose logs --tail 100 > compose.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: integration-results
+          path: |
+            test-results/
+            compose.log
+          retention-days: 7
+  container-security:
+    needs: checks
+    runs-on: ubuntu-latest
+    strategy: { matrix: { target: [service, web] } }
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build --target ${{ matrix.target }} -t lab-scan:${{ matrix.target }} .
+      - uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          {
+            image-ref: 'lab-scan:${{ matrix.target }}',
+            severity: 'CRITICAL,HIGH',
+            exit-code: '1',
+            ignore-unfixed: true,
+          }
+  cluster:
+    needs: integration
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: node scripts/setup-env.mjs && docker compose build gateway web
+      - uses: nolar/setup-k3d-k3s@v1
+        with: { skip-creation: true, version: v5.8.3 }
+      - run: bash scripts/k3d-up.sh
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:e2e
+        env: { BASE_URL: 'http://localhost:8089', RUN_CHAOS_E2E: 'true', RUN_HPA_E2E: 'true' }
+      - name: Kubernetes schema validation
+        run: |
+          curl -fsSL https://github.com/yannh/kubeconform/releases/download/v0.7.0/kubeconform-linux-amd64.tar.gz | tar xz kubeconform
+          kubectl kustomize infra/k8s/overlays/prod | ./kubeconform -strict -summary
+  images:
+    needs: [checks, integration, cluster, container-security]
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions: { contents: read, packages: write }
+    strategy: { matrix: { target: [service, web] } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          {
+            registry: ghcr.io,
+            username: '${{ github.actor }}',
+            password: '${{ secrets.GITHUB_TOKEN }}',
+          }
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: ${{ matrix.target }}
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ghcr.io/yehia249/resilience-lab-${{ matrix.target }}:${{ github.sha }},ghcr.io/yehia249/resilience-lab-${{ matrix.target }}:main
+          labels: org.opencontainers.image.source=https://github.com/yehia249/Resilience-Lab
+      - uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          {
+            image-ref: 'ghcr.io/yehia249/resilience-lab-${{ matrix.target }}:${{ github.sha }}',
+            severity: 'CRITICAL,HIGH',
+            exit-code: '1',
+            ignore-unfixed: true,
+          }

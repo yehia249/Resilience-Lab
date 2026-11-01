@@ -1,0 +1,1441 @@
+{
+  "analyzedAt": "2026-11-01T17:55:35.089Z",
+  "capturedThrough": "2026-11-01T17:54:12.346Z",
+  "complete": true,
+  "groups": [
+    {
+      "type": "KILL_PAYMENT",
+      "count": 10,
+      "medianRecoverySeconds": 51.2195,
+      "p95RecoverySeconds": 118.945,
+      "medianPeakP95Ms": 3499.5855926449403,
+      "maxObservedP99Ms": 5000
+    },
+    {
+      "type": "ADD_CATALOG_LATENCY",
+      "count": 10,
+      "medianRecoverySeconds": 54.433499999999995,
+      "p95RecoverySeconds": 120.572,
+      "medianPeakP95Ms": 1408.292962774095,
+      "maxObservedP99Ms": 4867.186734052014
+    },
+    {
+      "type": "SPIKE_TRAFFIC",
+      "count": 10,
+      "medianRecoverySeconds": 70.70349999999999,
+      "p95RecoverySeconds": 99.808,
+      "medianPeakP95Ms": 134.2226866016563,
+      "maxObservedP99Ms": 5000
+    },
+    {
+      "type": "SLOW_DATABASE",
+      "count": 10,
+      "medianRecoverySeconds": 53.186,
+      "p95RecoverySeconds": 245.202,
+      "medianPeakP95Ms": 870.6428571428562,
+      "maxObservedP99Ms": 4828.744831510692
+    }
+  ],
+  "runs": [
+    {
+      "id": "kill_payment-01",
+      "type": "KILL_PAYMENT",
+      "recoverySeconds": 118.945,
+      "peakP95Ms": 3973.529411764704,
+      "peakP99Ms": 4794.70588235294,
+      "peakErrorRatePct": 0.8827903716212429,
+      "baselineRps": 24.88095238095238,
+      "maxRps": 33.98809523809524,
+      "hpa": [
+        {
+          "service": "gateway",
+          "baselineDesired": 3,
+          "desiredIncreaseMs": 20463,
+          "readyIncreaseMs": 104728
+        },
+        {
+          "service": "catalog",
+          "baselineDesired": 2,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "cart",
+          "baselineDesired": 1,
+          "desiredIncreaseMs": 20463,
+          "readyIncreaseMs": 109750
+        }
+      ],
+      "observedPaymentUnreadyToReadyMs": 83145,
+      "snapshotCount": 96,
+      "traces": 5,
+      "traceSpans": 119,
+      "collectionErrors": 0
+    },
+    {
+      "id": "add_catalog_latency-01",
+      "type": "ADD_CATALOG_LATENCY",
+      "recoverySeconds": 67.642,
+      "peakP95Ms": 4335.996104848117,
+      "peakP99Ms": 4867.186734052014,
+      "peakErrorRatePct": 19.64345211729704,
+      "baselineRps": 24.5,
+      "maxRps": 30.095238095238095,
+      "hpa": [
+        {
+          "service": "gateway",
+          "baselineDesired": 5,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "catalog",
+          "baselineDesired": 2,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "cart",
+          "baselineDesired": 2,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        }
+      ],
+      "observedPaymentUnreadyToReadyMs": null,
+      "snapshotCount": 61,
+      "traces": 2,
+      "traceSpans": 36,
+      "collectionErrors": 0
+    },
+    {
+      "id": "spike_traffic-01",
+      "type": "SPIKE_TRAFFIC",
+      "recoverySeconds": 78.659,
+      "peakP95Ms": 4047.243285281782,
+      "peakP99Ms": 5000,
+      "peakErrorRatePct": 2.591835103913129,
+      "baselineRps": 24.666666666666664,
+      "maxRps": 119.08753858685175,
+      "hpa": [
+        {
+          "service": "gateway",
+          "baselineDesired": 5,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "catalog",
+          "baselineDesired": 2,
+          "desiredIncreaseMs": 34749,
+          "readyIncreaseMs": 69678
+        },
+        {
+          "service": "cart",
+          "baselineDesired": 2,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        }
+      ],
+      "observedPaymentUnreadyToReadyMs": null,
+      "snapshotCount": 72,
+      "traces": 2,
+      "traceSpans": 26,
+      "collectionErrors": 2
+    },
+    {
+      "id": "slow_database-01",
+      "type": "SLOW_DATABASE",
+      "recoverySeconds": 245.202,
+      "peakP95Ms": 642.298592522235,
+      "peakP99Ms": 3515.0000000000077,
+      "peakErrorRatePct": 0,
+      "baselineRps": 24.416666666666668,
+      "maxRps": 25.2057,
+      "hpa": [
+        {
+          "service": "gateway",
+          "baselineDesired": 5,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "catalog",
+          "baselineDesired": 4,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "cart",
+          "baselineDesired": 2,
+          "desiredIncreaseMs": 196312,
+          "readyIncreaseMs": 211162
+        }
+      ],
+      "observedPaymentUnreadyToReadyMs": null,
+      "snapshotCount": 76,
+      "traces": 2,
+      "traceSpans": 26,
+      "collectionErrors": 52
+    },
+    {
+      "id": "kill_payment-02",
+      "type": "KILL_PAYMENT",
+      "recoverySeconds": 44.573,
+      "peakP95Ms": 3981.250000000001,
+      "peakP99Ms": 4846.250000000001,
+      "peakErrorRatePct": 0,
+      "baselineRps": 24.416666666666664,
+      "maxRps": 28.833333333333332,
+      "hpa": [
+        {
+          "service": "gateway",
+          "baselineDesired": 4,
+          "desiredIncreaseMs": 18564,
+          "readyIncreaseMs": 35567
+        },
+        {
+          "service": "catalog",
+          "baselineDesired": 2,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "cart",
+          "baselineDesired": 1,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        }
+      ],
+      "observedPaymentUnreadyToReadyMs": 20989,
+      "snapshotCount": 43,
+      "traces": 5,
+      "traceSpans": 121,
+      "collectionErrors": 0
+    },
+    {
+      "id": "add_catalog_latency-02",
+      "type": "ADD_CATALOG_LATENCY",
+      "recoverySeconds": 53.815,
+      "peakP95Ms": 873.5714285714249,
+      "peakP99Ms": 3168.2857142857156,
+      "peakErrorRatePct": 0,
+      "baselineRps": 24.785714285714285,
+      "maxRps": 26.13095238095238,
+      "hpa": [
+        {
+          "service": "gateway",
+          "baselineDesired": 5,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "catalog",
+          "baselineDesired": 2,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "cart",
+          "baselineDesired": 1,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        }
+      ],
+      "observedPaymentUnreadyToReadyMs": null,
+      "snapshotCount": 59,
+      "traces": 2,
+      "traceSpans": 28,
+      "collectionErrors": 0
+    },
+    {
+      "id": "spike_traffic-02",
+      "type": "SPIKE_TRAFFIC",
+      "recoverySeconds": 70.199,
+      "peakP95Ms": 88.43578463517541,
+      "peakP99Ms": 4662.378185668581,
+      "peakErrorRatePct": 0,
+      "baselineRps": 24.666666666666664,
+      "maxRps": 122.42857142857142,
+      "hpa": [
+        {
+          "service": "gateway",
+          "baselineDesired": 5,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "catalog",
+          "baselineDesired": 2,
+          "desiredIncreaseMs": 32208,
+          "readyIncreaseMs": 48196
+        },
+        {
+          "service": "cart",
+          "baselineDesired": 1,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        }
+      ],
+      "observedPaymentUnreadyToReadyMs": null,
+      "snapshotCount": 78,
+      "traces": 3,
+      "traceSpans": 41,
+      "collectionErrors": 0
+    },
+    {
+      "id": "slow_database-02",
+      "type": "SLOW_DATABASE",
+      "recoverySeconds": 70.573,
+      "peakP95Ms": 2136.764705882355,
+      "peakP99Ms": 4427.352941176473,
+      "peakErrorRatePct": 0,
+      "baselineRps": 24.6547619047619,
+      "maxRps": 26.70238095238095,
+      "hpa": [
+        {
+          "service": "gateway",
+          "baselineDesired": 5,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "catalog",
+          "baselineDesired": 4,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "cart",
+          "baselineDesired": 1,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        }
+      ],
+      "observedPaymentUnreadyToReadyMs": null,
+      "snapshotCount": 70,
+      "traces": 3,
+      "traceSpans": 53,
+      "collectionErrors": 0
+    },
+    {
+      "id": "kill_payment-03",
+      "type": "KILL_PAYMENT",
+      "recoverySeconds": 24.82,
+      "peakP95Ms": 1332.5050579101512,
+      "peakP99Ms": 1484.0096897030517,
+      "peakErrorRatePct": 0,
+      "baselineRps": 24.51190476190476,
+      "maxRps": 35.357142857142854,
+      "hpa": [
+        {
+          "service": "gateway",
+          "baselineDesired": 5,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "catalog",
+          "baselineDesired": 4,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "cart",
+          "baselineDesired": 1,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        }
+      ],
+      "observedPaymentUnreadyToReadyMs": 12961,
+      "snapshotCount": 32,
+      "traces": 5,
+      "traceSpans": 107,
+      "collectionErrors": 0
+    },
+    {
+      "id": "add_catalog_latency-03",
+      "type": "ADD_CATALOG_LATENCY",
+      "recoverySeconds": 120.572,
+      "peakP95Ms": 1874.1477272727257,
+      "peakP99Ms": 4236.37431758873,
+      "peakErrorRatePct": 0,
+      "baselineRps": 24.928571428571427,
+      "maxRps": 29.391690693568098,
+      "hpa": [
+        {
+          "service": "gateway",
+          "baselineDesired": 4,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "catalog",
+          "baselineDesired": 3,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "cart",
+          "baselineDesired": 1,
+          "desiredIncreaseMs": 50322,
+          "readyIncreaseMs": 105640
+        }
+      ],
+      "observedPaymentUnreadyToReadyMs": null,
+      "snapshotCount": 97,
+      "traces": 1,
+      "traceSpans": 13,
+      "collectionErrors": 0
+    },
+    {
+      "id": "spike_traffic-03",
+      "type": "SPIKE_TRAFFIC",
+      "recoverySeconds": 70.798,
+      "peakP95Ms": 346.1956521739113,
+      "peakP99Ms": 1014.999999999997,
+      "peakErrorRatePct": 0,
+      "baselineRps": 24.833333333333332,
+      "maxRps": 120.45241417972757,
+      "hpa": [
+        {
+          "service": "gateway",
+          "baselineDesired": 4,
+          "desiredIncreaseMs": 39884,
+          "readyIncreaseMs": 55789
+        },
+        {
+          "service": "catalog",
+          "baselineDesired": 2,
+          "desiredIncreaseMs": 16728,
+          "readyIncreaseMs": 31726
+        },
+        {
+          "service": "cart",
+          "baselineDesired": 2,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        }
+      ],
+      "observedPaymentUnreadyToReadyMs": null,
+      "snapshotCount": 78,
+      "traces": 2,
+      "traceSpans": 28,
+      "collectionErrors": 0
+    },
+    {
+      "id": "slow_database-03",
+      "type": "SLOW_DATABASE",
+      "recoverySeconds": 53.205,
+      "peakP95Ms": 498.64709268854347,
+      "peakP99Ms": 3258.859716859705,
+      "peakErrorRatePct": 0,
+      "baselineRps": 24.71428571428571,
+      "maxRps": 25.39340863597369,
+      "hpa": [
+        {
+          "service": "gateway",
+          "baselineDesired": 5,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "catalog",
+          "baselineDesired": 4,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "cart",
+          "baselineDesired": 2,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        }
+      ],
+      "observedPaymentUnreadyToReadyMs": null,
+      "snapshotCount": 58,
+      "traces": 1,
+      "traceSpans": 16,
+      "collectionErrors": 0
+    },
+    {
+      "id": "kill_payment-04",
+      "type": "KILL_PAYMENT",
+      "recoverySeconds": 58.994,
+      "peakP95Ms": 4802.899135503177,
+      "peakP99Ms": 5000,
+      "peakErrorRatePct": 0.6782852772964189,
+      "baselineRps": 24.584631708270507,
+      "maxRps": 34.04409099593008,
+      "hpa": [
+        {
+          "service": "gateway",
+          "baselineDesired": 5,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "catalog",
+          "baselineDesired": 4,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "cart",
+          "baselineDesired": 2,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        }
+      ],
+      "observedPaymentUnreadyToReadyMs": 35735,
+      "snapshotCount": 49,
+      "traces": 5,
+      "traceSpans": 124,
+      "collectionErrors": 0
+    },
+    {
+      "id": "add_catalog_latency-04",
+      "type": "ADD_CATALOG_LATENCY",
+      "recoverySeconds": 54.406,
+      "peakP95Ms": 3360.2830861967145,
+      "peakP99Ms": 4679.618062964334,
+      "peakErrorRatePct": 2.510957025939329,
+      "baselineRps": 24.999999999999996,
+      "maxRps": 27.900766267949876,
+      "hpa": [
+        {
+          "service": "gateway",
+          "baselineDesired": 5,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "catalog",
+          "baselineDesired": 3,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "cart",
+          "baselineDesired": 2,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        }
+      ],
+      "observedPaymentUnreadyToReadyMs": null,
+      "snapshotCount": 52,
+      "traces": 2,
+      "traceSpans": 28,
+      "collectionErrors": 0
+    },
+    {
+      "id": "spike_traffic-04",
+      "type": "SPIKE_TRAFFIC",
+      "recoverySeconds": 69.581,
+      "peakP95Ms": 107.56232986111097,
+      "peakP99Ms": 293.53947229365605,
+      "peakErrorRatePct": 0,
+      "baselineRps": 24.928571428571427,
+      "maxRps": 122.49999999999999,
+      "hpa": [
+        {
+          "service": "gateway",
+          "baselineDesired": 5,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "catalog",
+          "baselineDesired": 4,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "cart",
+          "baselineDesired": 3,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        }
+      ],
+      "observedPaymentUnreadyToReadyMs": null,
+      "snapshotCount": 76,
+      "traces": 3,
+      "traceSpans": 48,
+      "collectionErrors": 0
+    },
+    {
+      "id": "slow_database-04",
+      "type": "SLOW_DATABASE",
+      "recoverySeconds": 52.733,
+      "peakP95Ms": 884.9999999999989,
+      "peakP99Ms": 3697.1881953947695,
+      "peakErrorRatePct": 0,
+      "baselineRps": 25.25,
+      "maxRps": 25.833333333333332,
+      "hpa": [
+        {
+          "service": "gateway",
+          "baselineDesired": 5,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "catalog",
+          "baselineDesired": 4,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "cart",
+          "baselineDesired": 2,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        }
+      ],
+      "observedPaymentUnreadyToReadyMs": null,
+      "snapshotCount": 60,
+      "traces": 2,
+      "traceSpans": 26,
+      "collectionErrors": 0
+    },
+    {
+      "id": "kill_payment-05",
+      "type": "KILL_PAYMENT",
+      "recoverySeconds": 32.162,
+      "peakP95Ms": 1521.328501371815,
+      "peakP99Ms": 2000,
+      "peakErrorRatePct": 0,
+      "baselineRps": 25,
+      "maxRps": 34.68333333333333,
+      "hpa": [
+        {
+          "service": "gateway",
+          "baselineDesired": 5,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "catalog",
+          "baselineDesired": 4,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "cart",
+          "baselineDesired": 2,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        }
+      ],
+      "observedPaymentUnreadyToReadyMs": 21619,
+      "snapshotCount": 38,
+      "traces": 5,
+      "traceSpans": 102,
+      "collectionErrors": 0
+    },
+    {
+      "id": "add_catalog_latency-05",
+      "type": "ADD_CATALOG_LATENCY",
+      "recoverySeconds": 52.773,
+      "peakP95Ms": 699.8000000000002,
+      "peakP99Ms": 1183.749999999999,
+      "peakErrorRatePct": 0,
+      "baselineRps": 24.999979171873697,
+      "maxRps": 25.916666666666668,
+      "hpa": [
+        {
+          "service": "gateway",
+          "baselineDesired": 5,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "catalog",
+          "baselineDesired": 4,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "cart",
+          "baselineDesired": 2,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        }
+      ],
+      "observedPaymentUnreadyToReadyMs": null,
+      "snapshotCount": 58,
+      "traces": 3,
+      "traceSpans": 41,
+      "collectionErrors": 0
+    },
+    {
+      "id": "spike_traffic-05",
+      "type": "SPIKE_TRAFFIC",
+      "recoverySeconds": 70.609,
+      "peakP95Ms": 77.31707317073173,
+      "peakP99Ms": 486.8749999999999,
+      "peakErrorRatePct": 0,
+      "baselineRps": 25,
+      "maxRps": 120.57142857142857,
+      "hpa": [
+        {
+          "service": "gateway",
+          "baselineDesired": 5,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "catalog",
+          "baselineDesired": 3,
+          "desiredIncreaseMs": 24683,
+          "readyIncreaseMs": 37629
+        },
+        {
+          "service": "cart",
+          "baselineDesired": 2,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        }
+      ],
+      "observedPaymentUnreadyToReadyMs": null,
+      "snapshotCount": 77,
+      "traces": 2,
+      "traceSpans": 26,
+      "collectionErrors": 0
+    },
+    {
+      "id": "slow_database-05",
+      "type": "SLOW_DATABASE",
+      "recoverySeconds": 52.295,
+      "peakP95Ms": 1013.3333333333326,
+      "peakP99Ms": 1402.6666666666672,
+      "peakErrorRatePct": 0,
+      "baselineRps": 24.928571428571427,
+      "maxRps": 25.666666666666664,
+      "hpa": [
+        {
+          "service": "gateway",
+          "baselineDesired": 5,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "catalog",
+          "baselineDesired": 4,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "cart",
+          "baselineDesired": 1,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        }
+      ],
+      "observedPaymentUnreadyToReadyMs": null,
+      "snapshotCount": 59,
+      "traces": 2,
+      "traceSpans": 28,
+      "collectionErrors": 0
+    },
+    {
+      "id": "kill_payment-06",
+      "type": "KILL_PAYMENT",
+      "recoverySeconds": 73.579,
+      "peakP95Ms": 2276.3157894736823,
+      "peakP99Ms": 4455.263157894734,
+      "peakErrorRatePct": 0,
+      "baselineRps": 25.249999999999996,
+      "maxRps": 35.731183333333334,
+      "hpa": [
+        {
+          "service": "gateway",
+          "baselineDesired": 4,
+          "desiredIncreaseMs": 33165,
+          "readyIncreaseMs": 64504
+        },
+        {
+          "service": "catalog",
+          "baselineDesired": 3,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "cart",
+          "baselineDesired": 1,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        }
+      ],
+      "observedPaymentUnreadyToReadyMs": 31539,
+      "snapshotCount": 62,
+      "traces": 5,
+      "traceSpans": 71,
+      "collectionErrors": 0
+    },
+    {
+      "id": "add_catalog_latency-06",
+      "type": "ADD_CATALOG_LATENCY",
+      "recoverySeconds": 57.893,
+      "peakP95Ms": 2104.4067174027937,
+      "peakP99Ms": 4416.070835303729,
+      "peakErrorRatePct": 0,
+      "baselineRps": 24.99960717091636,
+      "maxRps": 27,
+      "hpa": [
+        {
+          "service": "gateway",
+          "baselineDesired": 5,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "catalog",
+          "baselineDesired": 2,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "cart",
+          "baselineDesired": 1,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        }
+      ],
+      "observedPaymentUnreadyToReadyMs": null,
+      "snapshotCount": 60,
+      "traces": 2,
+      "traceSpans": 34,
+      "collectionErrors": 0
+    },
+    {
+      "id": "spike_traffic-06",
+      "type": "SPIKE_TRAFFIC",
+      "recoverySeconds": 79.147,
+      "peakP95Ms": 160.88304334220163,
+      "peakP99Ms": 1404.6161479744262,
+      "peakErrorRatePct": 0,
+      "baselineRps": 24.833333333333332,
+      "maxRps": 120.35705612864386,
+      "hpa": [
+        {
+          "service": "gateway",
+          "baselineDesired": 5,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "catalog",
+          "baselineDesired": 2,
+          "desiredIncreaseMs": 28949,
+          "readyIncreaseMs": 63219
+        },
+        {
+          "service": "cart",
+          "baselineDesired": 1,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        }
+      ],
+      "observedPaymentUnreadyToReadyMs": null,
+      "snapshotCount": 83,
+      "traces": 2,
+      "traceSpans": 26,
+      "collectionErrors": 0
+    },
+    {
+      "id": "slow_database-06",
+      "type": "SLOW_DATABASE",
+      "recoverySeconds": 52.843,
+      "peakP95Ms": 856.2857142857137,
+      "peakP99Ms": 1707.1428571428564,
+      "peakErrorRatePct": 0,
+      "baselineRps": 25.309523809523807,
+      "maxRps": 25.702380952380953,
+      "hpa": [
+        {
+          "service": "gateway",
+          "baselineDesired": 5,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "catalog",
+          "baselineDesired": 4,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "cart",
+          "baselineDesired": 1,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        }
+      ],
+      "observedPaymentUnreadyToReadyMs": null,
+      "snapshotCount": 59,
+      "traces": 2,
+      "traceSpans": 30,
+      "collectionErrors": 0
+    },
+    {
+      "id": "kill_payment-07",
+      "type": "KILL_PAYMENT",
+      "recoverySeconds": 49.221,
+      "peakP95Ms": 2226.1363636363562,
+      "peakP99Ms": 4445.227272727269,
+      "peakErrorRatePct": 0,
+      "baselineRps": 25.07142857142857,
+      "maxRps": 34.285714285714285,
+      "hpa": [
+        {
+          "service": "gateway",
+          "baselineDesired": 5,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "catalog",
+          "baselineDesired": 4,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "cart",
+          "baselineDesired": 1,
+          "desiredIncreaseMs": 24132,
+          "readyIncreaseMs": 40185
+        }
+      ],
+      "observedPaymentUnreadyToReadyMs": 18944,
+      "snapshotCount": 69,
+      "traces": 5,
+      "traceSpans": 141,
+      "collectionErrors": 0
+    },
+    {
+      "id": "add_catalog_latency-07",
+      "type": "ADD_CATALOG_LATENCY",
+      "recoverySeconds": 54.461,
+      "peakP95Ms": 882.0000000000008,
+      "peakP99Ms": 1983.5437570099134,
+      "peakErrorRatePct": 0,
+      "baselineRps": 25.13095238095238,
+      "maxRps": 25.96450801060671,
+      "hpa": [
+        {
+          "service": "gateway",
+          "baselineDesired": 5,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "catalog",
+          "baselineDesired": 3,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "cart",
+          "baselineDesired": 2,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        }
+      ],
+      "observedPaymentUnreadyToReadyMs": null,
+      "snapshotCount": 46,
+      "traces": 3,
+      "traceSpans": 43,
+      "collectionErrors": 0
+    },
+    {
+      "id": "spike_traffic-07",
+      "type": "SPIKE_TRAFFIC",
+      "recoverySeconds": 99.808,
+      "peakP95Ms": 802.2857142857151,
+      "peakP99Ms": 1437.065217391304,
+      "peakErrorRatePct": 0,
+      "baselineRps": 25.04394105029456,
+      "maxRps": 119.99999999999999,
+      "hpa": [
+        {
+          "service": "gateway",
+          "baselineDesired": 4,
+          "desiredIncreaseMs": 32701,
+          "readyIncreaseMs": 76681
+        },
+        {
+          "service": "catalog",
+          "baselineDesired": 2,
+          "desiredIncreaseMs": 32701,
+          "readyIncreaseMs": 76681
+        },
+        {
+          "service": "cart",
+          "baselineDesired": 2,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        }
+      ],
+      "observedPaymentUnreadyToReadyMs": null,
+      "snapshotCount": 99,
+      "traces": 2,
+      "traceSpans": 32,
+      "collectionErrors": 0
+    },
+    {
+      "id": "slow_database-07",
+      "type": "SLOW_DATABASE",
+      "recoverySeconds": 54.182,
+      "peakP95Ms": 496.97674775509086,
+      "peakP99Ms": 2765.8207407407513,
+      "peakErrorRatePct": 0,
+      "baselineRps": 24.13095238095238,
+      "maxRps": 26.035714285714285,
+      "hpa": [
+        {
+          "service": "gateway",
+          "baselineDesired": 5,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "catalog",
+          "baselineDesired": 4,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "cart",
+          "baselineDesired": 2,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        }
+      ],
+      "observedPaymentUnreadyToReadyMs": null,
+      "snapshotCount": 58,
+      "traces": 2,
+      "traceSpans": 28,
+      "collectionErrors": 0
+    },
+    {
+      "id": "kill_payment-08",
+      "type": "KILL_PAYMENT",
+      "recoverySeconds": 53.218,
+      "peakP95Ms": 3410.132158590309,
+      "peakP99Ms": 4682.026431718061,
+      "peakErrorRatePct": 0,
+      "baselineRps": 24.88095238095238,
+      "maxRps": 34.45238095238095,
+      "hpa": [
+        {
+          "service": "gateway",
+          "baselineDesired": 5,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "catalog",
+          "baselineDesired": 4,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "cart",
+          "baselineDesired": 1,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        }
+      ],
+      "observedPaymentUnreadyToReadyMs": 19607,
+      "snapshotCount": 57,
+      "traces": 5,
+      "traceSpans": 123,
+      "collectionErrors": 0
+    },
+    {
+      "id": "add_catalog_latency-08",
+      "type": "ADD_CATALOG_LATENCY",
+      "recoverySeconds": 56.462,
+      "peakP95Ms": 1738.207547169811,
+      "peakP99Ms": 4197.215189873422,
+      "peakErrorRatePct": 0,
+      "baselineRps": 24.999999999999996,
+      "maxRps": 26.3552056447728,
+      "hpa": [
+        {
+          "service": "gateway",
+          "baselineDesired": 5,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "catalog",
+          "baselineDesired": 3,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "cart",
+          "baselineDesired": 1,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        }
+      ],
+      "observedPaymentUnreadyToReadyMs": null,
+      "snapshotCount": 69,
+      "traces": 3,
+      "traceSpans": 40,
+      "collectionErrors": 0
+    },
+    {
+      "id": "spike_traffic-08",
+      "type": "SPIKE_TRAFFIC",
+      "recoverySeconds": 90.789,
+      "peakP95Ms": 2131.4955752212463,
+      "peakP99Ms": 4515.680922445529,
+      "peakErrorRatePct": 1.5211637816556702,
+      "baselineRps": 20.50900965234882,
+      "maxRps": 98.00403097692359,
+      "hpa": [
+        {
+          "service": "gateway",
+          "baselineDesired": 4,
+          "desiredIncreaseMs": 37894,
+          "readyIncreaseMs": 49138
+        },
+        {
+          "service": "catalog",
+          "baselineDesired": 3,
+          "desiredIncreaseMs": 53406,
+          "readyIncreaseMs": 59526
+        },
+        {
+          "service": "cart",
+          "baselineDesired": 1,
+          "desiredIncreaseMs": 50109,
+          "readyIncreaseMs": 81712
+        }
+      ],
+      "observedPaymentUnreadyToReadyMs": null,
+      "snapshotCount": 70,
+      "traces": 3,
+      "traceSpans": 51,
+      "collectionErrors": 0
+    },
+    {
+      "id": "slow_database-08",
+      "type": "SLOW_DATABASE",
+      "recoverySeconds": 156.566,
+      "peakP95Ms": 4467.1086236435385,
+      "peakP99Ms": 4828.744831510692,
+      "peakErrorRatePct": 9.438957710298816,
+      "baselineRps": 24.892857142857142,
+      "maxRps": 29.509341725779848,
+      "hpa": [
+        {
+          "service": "gateway",
+          "baselineDesired": 5,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "catalog",
+          "baselineDesired": 4,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "cart",
+          "baselineDesired": 2,
+          "desiredIncreaseMs": 40628,
+          "readyIncreaseMs": 146508
+        }
+      ],
+      "observedPaymentUnreadyToReadyMs": null,
+      "snapshotCount": 89,
+      "traces": 2,
+      "traceSpans": 28,
+      "collectionErrors": 7
+    },
+    {
+      "id": "kill_payment-09",
+      "type": "KILL_PAYMENT",
+      "recoverySeconds": 62.861,
+      "peakP95Ms": 5000,
+      "peakP99Ms": 5000,
+      "peakErrorRatePct": 73.65736573657367,
+      "baselineRps": 24.666666666666664,
+      "maxRps": 28.249999999999996,
+      "hpa": [
+        {
+          "service": "gateway",
+          "baselineDesired": 3,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "catalog",
+          "baselineDesired": 2,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "cart",
+          "baselineDesired": 1,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        }
+      ],
+      "observedPaymentUnreadyToReadyMs": 52759,
+      "snapshotCount": 49,
+      "traces": 4,
+      "traceSpans": 120,
+      "collectionErrors": 1
+    },
+    {
+      "id": "add_catalog_latency-09",
+      "type": "ADD_CATALOG_LATENCY",
+      "recoverySeconds": 53.227,
+      "peakP95Ms": 612.4631516342574,
+      "peakP99Ms": 1475.0000000000016,
+      "peakErrorRatePct": 0,
+      "baselineRps": 25.059523809523807,
+      "maxRps": 26.69973313318322,
+      "hpa": [
+        {
+          "service": "gateway",
+          "baselineDesired": 3,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "catalog",
+          "baselineDesired": 2,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "cart",
+          "baselineDesired": 1,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        }
+      ],
+      "observedPaymentUnreadyToReadyMs": null,
+      "snapshotCount": 44,
+      "traces": 3,
+      "traceSpans": 41,
+      "collectionErrors": 0
+    },
+    {
+      "id": "spike_traffic-09",
+      "type": "SPIKE_TRAFFIC",
+      "recoverySeconds": 69.625,
+      "peakP95Ms": 88.88707730438908,
+      "peakP99Ms": 371.7968750000009,
+      "peakErrorRatePct": 0,
+      "baselineRps": 24.738095238095237,
+      "maxRps": 121.97619047619047,
+      "hpa": [
+        {
+          "service": "gateway",
+          "baselineDesired": 3,
+          "desiredIncreaseMs": 28537,
+          "readyIncreaseMs": 44695
+        },
+        {
+          "service": "catalog",
+          "baselineDesired": 2,
+          "desiredIncreaseMs": 28537,
+          "readyIncreaseMs": 48903
+        },
+        {
+          "service": "cart",
+          "baselineDesired": 1,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        }
+      ],
+      "observedPaymentUnreadyToReadyMs": null,
+      "snapshotCount": 72,
+      "traces": 2,
+      "traceSpans": 26,
+      "collectionErrors": 0
+    },
+    {
+      "id": "slow_database-09",
+      "type": "SLOW_DATABASE",
+      "recoverySeconds": 53.167,
+      "peakP95Ms": 1019.148936170212,
+      "peakP99Ms": 1972.5000000000064,
+      "peakErrorRatePct": 0,
+      "baselineRps": 24.928571428571427,
+      "maxRps": 26.273809523809522,
+      "hpa": [
+        {
+          "service": "gateway",
+          "baselineDesired": 5,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "catalog",
+          "baselineDesired": 4,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "cart",
+          "baselineDesired": 1,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        }
+      ],
+      "observedPaymentUnreadyToReadyMs": null,
+      "snapshotCount": 60,
+      "traces": 3,
+      "traceSpans": 45,
+      "collectionErrors": 0
+    },
+    {
+      "id": "kill_payment-10",
+      "type": "KILL_PAYMENT",
+      "recoverySeconds": 44.436,
+      "peakP95Ms": 3589.0390266995714,
+      "peakP99Ms": 4983.310619077222,
+      "peakErrorRatePct": 1.9450549431117792,
+      "baselineRps": 24.726190476190474,
+      "maxRps": 30.052660317460315,
+      "hpa": [
+        {
+          "service": "gateway",
+          "baselineDesired": 5,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "catalog",
+          "baselineDesired": 4,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "cart",
+          "baselineDesired": 1,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        }
+      ],
+      "observedPaymentUnreadyToReadyMs": 16467,
+      "snapshotCount": 36,
+      "traces": 5,
+      "traceSpans": 134,
+      "collectionErrors": 0
+    },
+    {
+      "id": "add_catalog_latency-10",
+      "type": "ADD_CATALOG_LATENCY",
+      "recoverySeconds": 53.772,
+      "peakP95Ms": 1078.3783783783788,
+      "peakP99Ms": 3290.8823529411866,
+      "peakErrorRatePct": 0,
+      "baselineRps": 25.107142857142854,
+      "maxRps": 26.249999999999996,
+      "hpa": [
+        {
+          "service": "gateway",
+          "baselineDesired": 5,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "catalog",
+          "baselineDesired": 3,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "cart",
+          "baselineDesired": 1,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        }
+      ],
+      "observedPaymentUnreadyToReadyMs": null,
+      "snapshotCount": 58,
+      "traces": 3,
+      "traceSpans": 41,
+      "collectionErrors": 0
+    },
+    {
+      "id": "spike_traffic-10",
+      "type": "SPIKE_TRAFFIC",
+      "recoverySeconds": 69.299,
+      "peakP95Ms": 82.83881014023711,
+      "peakP99Ms": 194.2541734104044,
+      "peakErrorRatePct": 0,
+      "baselineRps": 24.833333333333332,
+      "maxRps": 122.68562345641215,
+      "hpa": [
+        {
+          "service": "gateway",
+          "baselineDesired": 4,
+          "desiredIncreaseMs": 37297,
+          "readyIncreaseMs": 48300
+        },
+        {
+          "service": "catalog",
+          "baselineDesired": 2,
+          "desiredIncreaseMs": 22289,
+          "readyIncreaseMs": 33373
+        },
+        {
+          "service": "cart",
+          "baselineDesired": 1,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        }
+      ],
+      "observedPaymentUnreadyToReadyMs": null,
+      "snapshotCount": 61,
+      "traces": 3,
+      "traceSpans": 35,
+      "collectionErrors": 0
+    },
+    {
+      "id": "slow_database-10",
+      "type": "SLOW_DATABASE",
+      "recoverySeconds": 52.652,
+      "peakP95Ms": 498.3406432748538,
+      "peakP99Ms": 1796.9607843137253,
+      "peakErrorRatePct": 0,
+      "baselineRps": 25.166666666666668,
+      "maxRps": 25.80952380952381,
+      "hpa": [
+        {
+          "service": "gateway",
+          "baselineDesired": 5,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "catalog",
+          "baselineDesired": 4,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        },
+        {
+          "service": "cart",
+          "baselineDesired": 1,
+          "desiredIncreaseMs": null,
+          "readyIncreaseMs": null
+        }
+      ],
+      "observedPaymentUnreadyToReadyMs": null,
+      "snapshotCount": 60,
+      "traces": 3,
+      "traceSpans": 43,
+      "collectionErrors": 0
+    }
+  ]
+}

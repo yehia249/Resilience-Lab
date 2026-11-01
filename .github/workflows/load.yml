@@ -1,0 +1,31 @@
+name: Measured Compose load tests
+on:
+  workflow_dispatch:
+permissions: { contents: read }
+concurrency: { group: load-experiments, cancel-in-progress: false }
+jobs:
+  load:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - run: node scripts/setup-env.mjs && docker compose build gateway web && docker compose up -d --wait --wait-timeout 240
+      - name: Record runtime provenance
+        run: |
+          mkdir -p docs/benchmarks/load
+          git rev-parse HEAD > docs/benchmarks/load/revision.txt
+          date -u +%FT%TZ > docs/benchmarks/load/started-at.txt
+          docker compose images > docs/benchmarks/load/images.txt
+          echo 'GitHub Actions ubuntu-latest; separate local Docker Compose stack, not the workstation k3d recording target.' > docs/benchmarks/load/environment.txt
+      - name: Baseline, fivefold spike and one-hour soak
+        run: |
+          for scenario in baseline spike soak; do
+            docker run --rm --user 0 --network resilience-lab_default -v "$PWD/loadtests:/scripts:ro" -v "$PWD/docs/benchmarks/load:/results" grafana/k6:1.3.0 run --summary-export=/results/$scenario.json /scripts/$scenario.js
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: actual-compose-load-measurements
+          path: docs/benchmarks/load/
+      - run: docker compose down
+        if: always()

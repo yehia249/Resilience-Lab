@@ -1,0 +1,64 @@
+{
+  "measuredAt": "2026-11-01T15:23:24.369Z",
+  "target": "http://localhost:8088",
+  "measurements": [
+    {
+      "type": "KILL_PAYMENT",
+      "queuedOrderId": "75869e5f-0419-407a-b2e0-5f2431818f16",
+      "checkoutMs": 77.9391969999997
+    },
+    {
+      "type": "KILL_PAYMENT",
+      "recovery": {
+        "fault_type": "KILL_PAYMENT",
+        "duration": 29.308,
+        "peak_p95": 97.11611111111107,
+        "peak_error_rate": 0,
+        "created_at": "2026-11-01 15:20:11.091338+00"
+      }
+    },
+    {
+      "type": "ADD_CATALOG_LATENCY",
+      "requestMs": 460.35050000000047
+    },
+    {
+      "type": "ADD_CATALOG_LATENCY",
+      "recovery": {
+        "fault_type": "ADD_CATALOG_LATENCY",
+        "duration": 53.677,
+        "peak_p95": 702.4999999999997,
+        "peak_error_rate": 0,
+        "created_at": "2026-11-01 15:21:10.074171+00"
+      }
+    },
+    {
+      "type": "SPIKE_TRAFFIC",
+      "baselineRps": 25.142857142857142,
+      "spikeRps": 125.2142857142857
+    },
+    {
+      "type": "SPIKE_TRAFFIC",
+      "recovery": {
+        "fault_type": "SPIKE_TRAFFIC",
+        "duration": 70.739,
+        "peak_p95": 236.95488721804506,
+        "peak_error_rate": 0.22692889561270801,
+        "created_at": "2026-11-01 15:22:23.374473+00"
+      }
+    },
+    {
+      "type": "SLOW_DATABASE",
+      "requestMs": 257.03059999999823
+    },
+    {
+      "type": "SLOW_DATABASE",
+      "recovery": {
+        "fault_type": "SLOW_DATABASE",
+        "duration": 52.837,
+        "peak_p95": 1221.4285714285716,
+        "peak_error_rate": 0,
+        "created_at": "2026-11-01 15:23:22.148313+00"
+      }
+    }
+  ]
+}

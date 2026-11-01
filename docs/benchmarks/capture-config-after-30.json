@@ -1,0 +1,843 @@
+{
+  "observedAt": "2026-11-01T17:39:01.216Z",
+  "notes": "After 30 completed captures and an interrupted spike, the existing runtime received longer startup/liveness budgets. The running service image was not replaced. Synthetic traffic was paused during rollout and restored before resumed captures. Earlier and later runs are a heterogeneous operational campaign, not a controlled A/B comparison.",
+  "configurations": [
+    {
+      "namespace": "lab",
+      "service": "cart",
+      "replicas": 3,
+      "containers": [
+        {
+          "name": "cart",
+          "image": "resilience-lab/service:local",
+          "resources": {
+            "limits": {
+              "cpu": "200m",
+              "memory": "192Mi"
+            },
+            "requests": {
+              "cpu": "50m",
+              "memory": "96Mi"
+            }
+          },
+          "startupProbe": {
+            "failureThreshold": 60,
+            "httpGet": {
+              "path": "/healthz",
+              "port": 8082,
+              "scheme": "HTTP"
+            },
+            "periodSeconds": 5,
+            "successThreshold": 1,
+            "timeoutSeconds": 3
+          },
+          "livenessProbe": {
+            "failureThreshold": 6,
+            "httpGet": {
+              "path": "/healthz",
+              "port": 8082,
+              "scheme": "HTTP"
+            },
+            "initialDelaySeconds": 25,
+            "periodSeconds": 10,
+            "successThreshold": 1,
+            "timeoutSeconds": 3
+          },
+          "readinessProbe": {
+            "failureThreshold": 3,
+            "httpGet": {
+              "path": "/readyz",
+              "port": 8082,
+              "scheme": "HTTP"
+            },
+            "initialDelaySeconds": 5,
+            "periodSeconds": 5,
+            "successThreshold": 1,
+            "timeoutSeconds": 3
+          }
+        }
+      ]
+    },
+    {
+      "namespace": "lab",
+      "service": "catalog",
+      "replicas": 4,
+      "containers": [
+        {
+          "name": "catalog",
+          "image": "resilience-lab/service:local",
+          "resources": {
+            "limits": {
+              "cpu": "300m",
+              "memory": "256Mi"
+            },
+            "requests": {
+              "cpu": "100m",
+              "memory": "128Mi"
+            }
+          },
+          "startupProbe": {
+            "failureThreshold": 60,
+            "httpGet": {
+              "path": "/healthz",
+              "port": 8081,
+              "scheme": "HTTP"
+            },
+            "periodSeconds": 5,
+            "successThreshold": 1,
+            "timeoutSeconds": 3
+          },
+          "livenessProbe": {
+            "failureThreshold": 6,
+            "httpGet": {
+              "path": "/healthz",
+              "port": 8081,
+              "scheme": "HTTP"
+            },
+            "initialDelaySeconds": 25,
+            "periodSeconds": 10,
+            "successThreshold": 1,
+            "timeoutSeconds": 3
+          },
+          "readinessProbe": {
+            "failureThreshold": 3,
+            "httpGet": {
+              "path": "/readyz",
+              "port": 8081,
+              "scheme": "HTTP"
+            },
+            "initialDelaySeconds": 5,
+            "periodSeconds": 5,
+            "successThreshold": 1,
+            "timeoutSeconds": 3
+          }
+        }
+      ]
+    },
+    {
+      "namespace": "lab",
+      "service": "chaos-controller",
+      "replicas": 1,
+      "containers": [
+        {
+          "name": "chaos-controller",
+          "image": "resilience-lab/service:local",
+          "resources": {
+            "limits": {
+              "cpu": "100m",
+              "memory": "128Mi"
+            },
+            "requests": {
+              "cpu": "20m",
+              "memory": "64Mi"
+            }
+          },
+          "startupProbe": {
+            "failureThreshold": 60,
+            "httpGet": {
+              "path": "/healthz",
+              "port": 8090,
+              "scheme": "HTTP"
+            },
+            "periodSeconds": 5,
+            "successThreshold": 1,
+            "timeoutSeconds": 3
+          },
+          "livenessProbe": {
+            "failureThreshold": 6,
+            "httpGet": {
+              "path": "/healthz",
+              "port": 8090,
+              "scheme": "HTTP"
+            },
+            "initialDelaySeconds": 25,
+            "periodSeconds": 10,
+            "successThreshold": 1,
+            "timeoutSeconds": 3
+          },
+          "readinessProbe": {
+            "failureThreshold": 3,
+            "httpGet": {
+              "path": "/readyz",
+              "port": 8090,
+              "scheme": "HTTP"
+            },
+            "initialDelaySeconds": 5,
+            "periodSeconds": 5,
+            "successThreshold": 1,
+            "timeoutSeconds": 3
+          }
+        }
+      ]
+    },
+    {
+      "namespace": "lab",
+      "service": "gateway",
+      "replicas": 5,
+      "containers": [
+        {
+          "name": "gateway",
+          "image": "resilience-lab/service:local",
+          "resources": {
+            "limits": {
+              "cpu": "400m",
+              "memory": "256Mi"
+            },
+            "requests": {
+              "cpu": "100m",
+              "memory": "128Mi"
+            }
+          },
+          "startupProbe": {
+            "failureThreshold": 60,
+            "httpGet": {
+              "path": "/healthz",
+              "port": 8080,
+              "scheme": "HTTP"
+            },
+            "periodSeconds": 5,
+            "successThreshold": 1,
+            "timeoutSeconds": 3
+          },
+          "livenessProbe": {
+            "failureThreshold": 6,
+            "httpGet": {
+              "path": "/healthz",
+              "port": 8080,
+              "scheme": "HTTP"
+            },
+            "initialDelaySeconds": 25,
+            "periodSeconds": 10,
+            "successThreshold": 1,
+            "timeoutSeconds": 3
+          },
+          "readinessProbe": {
+            "failureThreshold": 3,
+            "httpGet": {
+              "path": "/readyz",
+              "port": 8080,
+              "scheme": "HTTP"
+            },
+            "initialDelaySeconds": 5,
+            "periodSeconds": 5,
+            "successThreshold": 1,
+            "timeoutSeconds": 3
+          }
+        }
+      ]
+    },
+    {
+      "namespace": "lab",
+      "service": "jaeger",
+      "replicas": 1,
+      "containers": [
+        {
+          "name": "jaeger",
+          "image": "jaegertracing/all-in-one:1.76.0",
+          "resources": {
+            "limits": {
+              "cpu": "300m",
+              "memory": "512Mi"
+            },
+            "requests": {
+              "cpu": "100m",
+              "memory": "256Mi"
+            }
+          },
+          "startupProbe": {
+            "failureThreshold": 60,
+            "httpGet": {
+              "path": "/",
+              "port": 14269,
+              "scheme": "HTTP"
+            },
+            "periodSeconds": 5,
+            "successThreshold": 1,
+            "timeoutSeconds": 3
+          },
+          "livenessProbe": {
+            "failureThreshold": 6,
+            "httpGet": {
+              "path": "/",
+              "port": 14269,
+              "scheme": "HTTP"
+            },
+            "periodSeconds": 5,
+            "successThreshold": 1,
+            "timeoutSeconds": 3
+          },
+          "readinessProbe": {
+            "failureThreshold": 3,
+            "httpGet": {
+              "path": "/",
+              "port": 14269,
+              "scheme": "HTTP"
+            },
+            "periodSeconds": 5,
+            "successThreshold": 1,
+            "timeoutSeconds": 3
+          }
+        }
+      ]
+    },
+    {
+      "namespace": "lab",
+      "service": "order-worker",
+      "replicas": 1,
+      "containers": [
+        {
+          "name": "order-worker",
+          "image": "resilience-lab/service:local",
+          "resources": {
+            "limits": {
+              "cpu": "200m",
+              "memory": "192Mi"
+            },
+            "requests": {
+              "cpu": "50m",
+              "memory": "96Mi"
+            }
+          },
+          "startupProbe": {
+            "failureThreshold": 60,
+            "httpGet": {
+              "path": "/healthz",
+              "port": 8084,
+              "scheme": "HTTP"
+            },
+            "periodSeconds": 5,
+            "successThreshold": 1,
+            "timeoutSeconds": 3
+          },
+          "livenessProbe": {
+            "failureThreshold": 6,
+            "httpGet": {
+              "path": "/healthz",
+              "port": 8084,
+              "scheme": "HTTP"
+            },
+            "initialDelaySeconds": 25,
+            "periodSeconds": 10,
+            "successThreshold": 1,
+            "timeoutSeconds": 3
+          },
+          "readinessProbe": {
+            "failureThreshold": 3,
+            "httpGet": {
+              "path": "/readyz",
+              "port": 8084,
+              "scheme": "HTTP"
+            },
+            "initialDelaySeconds": 5,
+            "periodSeconds": 5,
+            "successThreshold": 1,
+            "timeoutSeconds": 3
+          }
+        }
+      ]
+    },
+    {
+      "namespace": "lab",
+      "service": "otel-collector",
+      "replicas": 1,
+      "containers": [
+        {
+          "name": "otel-collector",
+          "image": "otel/opentelemetry-collector-contrib:0.139.0",
+          "resources": {
+            "limits": {
+              "cpu": "200m",
+              "memory": "256Mi"
+            },
+            "requests": {
+              "cpu": "50m",
+              "memory": "128Mi"
+            }
+          },
+          "startupProbe": {
+            "failureThreshold": 3,
+            "periodSeconds": 5,
+            "successThreshold": 1,
+            "tcpSocket": {
+              "port": 4318
+            },
+            "timeoutSeconds": 1
+          },
+          "livenessProbe": {
+            "failureThreshold": 3,
+            "periodSeconds": 5,
+            "successThreshold": 1,
+            "tcpSocket": {
+              "port": 4318
+            },
+            "timeoutSeconds": 1
+          },
+          "readinessProbe": {
+            "failureThreshold": 3,
+            "periodSeconds": 5,
+            "successThreshold": 1,
+            "tcpSocket": {
+              "port": 4318
+            },
+            "timeoutSeconds": 1
+          }
+        }
+      ]
+    },
+    {
+      "namespace": "lab",
+      "service": "postgres",
+      "replicas": 1,
+      "containers": [
+        {
+          "name": "postgres",
+          "image": "postgres:16.11-alpine",
+          "resources": {
+            "limits": {
+              "cpu": "500m",
+              "memory": "512Mi"
+            },
+            "requests": {
+              "cpu": "100m",
+              "memory": "256Mi"
+            }
+          },
+          "startupProbe": {
+            "exec": {
+              "command": [
+                "pg_isready",
+                "-U",
+                "lab",
+                "-d",
+                "lab"
+              ]
+            },
+            "failureThreshold": 3,
+            "periodSeconds": 5,
+            "successThreshold": 1,
+            "timeoutSeconds": 1
+          },
+          "livenessProbe": {
+            "exec": {
+              "command": [
+                "pg_isready",
+                "-U",
+                "lab",
+                "-d",
+                "lab"
+              ]
+            },
+            "failureThreshold": 3,
+            "periodSeconds": 5,
+            "successThreshold": 1,
+            "timeoutSeconds": 1
+          },
+          "readinessProbe": {
+            "exec": {
+              "command": [
+                "pg_isready",
+                "-U",
+                "lab",
+                "-d",
+                "lab"
+              ]
+            },
+            "failureThreshold": 3,
+            "periodSeconds": 5,
+            "successThreshold": 1,
+            "timeoutSeconds": 1
+          }
+        }
+      ]
+    },
+    {
+      "namespace": "lab",
+      "service": "prometheus",
+      "replicas": 1,
+      "containers": [
+        {
+          "name": "prometheus",
+          "image": "prom/prometheus:v3.7.2",
+          "resources": {
+            "limits": {
+              "cpu": "500m",
+              "memory": "768Mi"
+            },
+            "requests": {
+              "cpu": "200m",
+              "memory": "512Mi"
+            }
+          },
+          "startupProbe": {
+            "failureThreshold": 60,
+            "httpGet": {
+              "path": "/-/ready",
+              "port": 9090,
+              "scheme": "HTTP"
+            },
+            "periodSeconds": 5,
+            "successThreshold": 1,
+            "timeoutSeconds": 3
+          },
+          "livenessProbe": {
+            "failureThreshold": 6,
+            "httpGet": {
+              "path": "/-/ready",
+              "port": 9090,
+              "scheme": "HTTP"
+            },
+            "periodSeconds": 5,
+            "successThreshold": 1,
+            "timeoutSeconds": 3
+          },
+          "readinessProbe": {
+            "failureThreshold": 3,
+            "httpGet": {
+              "path": "/-/ready",
+              "port": 9090,
+              "scheme": "HTTP"
+            },
+            "periodSeconds": 5,
+            "successThreshold": 1,
+            "timeoutSeconds": 3
+          }
+        }
+      ]
+    },
+    {
+      "namespace": "lab",
+      "service": "redis",
+      "replicas": 1,
+      "containers": [
+        {
+          "name": "redis",
+          "image": "redis:7.4.6-alpine",
+          "resources": {
+            "limits": {
+              "cpu": "200m",
+              "memory": "128Mi"
+            },
+            "requests": {
+              "cpu": "50m",
+              "memory": "64Mi"
+            }
+          },
+          "startupProbe": {
+            "exec": {
+              "command": [
+                "redis-cli",
+                "ping"
+              ]
+            },
+            "failureThreshold": 3,
+            "periodSeconds": 5,
+            "successThreshold": 1,
+            "timeoutSeconds": 1
+          },
+          "livenessProbe": {
+            "exec": {
+              "command": [
+                "redis-cli",
+                "ping"
+              ]
+            },
+            "failureThreshold": 3,
+            "periodSeconds": 5,
+            "successThreshold": 1,
+            "timeoutSeconds": 1
+          },
+          "readinessProbe": {
+            "exec": {
+              "command": [
+                "redis-cli",
+                "ping"
+              ]
+            },
+            "failureThreshold": 3,
+            "periodSeconds": 5,
+            "successThreshold": 1,
+            "timeoutSeconds": 1
+          }
+        }
+      ]
+    },
+    {
+      "namespace": "lab",
+      "service": "telemetry-api",
+      "replicas": 1,
+      "containers": [
+        {
+          "name": "telemetry-api",
+          "image": "resilience-lab/service:local",
+          "resources": {
+            "limits": {
+              "cpu": "300m",
+              "memory": "256Mi"
+            },
+            "requests": {
+              "cpu": "100m",
+              "memory": "128Mi"
+            }
+          },
+          "startupProbe": {
+            "failureThreshold": 60,
+            "httpGet": {
+              "path": "/healthz",
+              "port": 8095,
+              "scheme": "HTTP"
+            },
+            "periodSeconds": 5,
+            "successThreshold": 1,
+            "timeoutSeconds": 3
+          },
+          "livenessProbe": {
+            "failureThreshold": 6,
+            "httpGet": {
+              "path": "/healthz",
+              "port": 8095,
+              "scheme": "HTTP"
+            },
+            "initialDelaySeconds": 25,
+            "periodSeconds": 10,
+            "successThreshold": 1,
+            "timeoutSeconds": 3
+          },
+          "readinessProbe": {
+            "failureThreshold": 3,
+            "httpGet": {
+              "path": "/readyz",
+              "port": 8095,
+              "scheme": "HTTP"
+            },
+            "initialDelaySeconds": 5,
+            "periodSeconds": 5,
+            "successThreshold": 1,
+            "timeoutSeconds": 3
+          }
+        }
+      ]
+    },
+    {
+      "namespace": "lab",
+      "service": "traffic-generator",
+      "replicas": 1,
+      "containers": [
+        {
+          "name": "traffic-generator",
+          "image": "resilience-lab/service:local",
+          "resources": {
+            "limits": {
+              "cpu": "300m",
+              "memory": "256Mi"
+            },
+            "requests": {
+              "cpu": "100m",
+              "memory": "128Mi"
+            }
+          },
+          "startupProbe": {
+            "failureThreshold": 60,
+            "httpGet": {
+              "path": "/healthz",
+              "port": 8091,
+              "scheme": "HTTP"
+            },
+            "periodSeconds": 5,
+            "successThreshold": 1,
+            "timeoutSeconds": 3
+          },
+          "livenessProbe": {
+            "failureThreshold": 6,
+            "httpGet": {
+              "path": "/healthz",
+              "port": 8091,
+              "scheme": "HTTP"
+            },
+            "initialDelaySeconds": 25,
+            "periodSeconds": 10,
+            "successThreshold": 1,
+            "timeoutSeconds": 3
+          },
+          "readinessProbe": {
+            "failureThreshold": 3,
+            "httpGet": {
+              "path": "/readyz",
+              "port": 8091,
+              "scheme": "HTTP"
+            },
+            "initialDelaySeconds": 5,
+            "periodSeconds": 5,
+            "successThreshold": 1,
+            "timeoutSeconds": 3
+          }
+        }
+      ]
+    },
+    {
+      "namespace": "lab",
+      "service": "web",
+      "replicas": 1,
+      "containers": [
+        {
+          "name": "web",
+          "image": "resilience-lab/web:local",
+          "resources": {
+            "limits": {
+              "cpu": "100m",
+              "memory": "64Mi"
+            },
+            "requests": {
+              "cpu": "20m",
+              "memory": "32Mi"
+            }
+          },
+          "startupProbe": {
+            "failureThreshold": 60,
+            "httpGet": {
+              "path": "/",
+              "port": 8088,
+              "scheme": "HTTP"
+            },
+            "periodSeconds": 5,
+            "successThreshold": 1,
+            "timeoutSeconds": 3
+          },
+          "livenessProbe": {
+            "failureThreshold": 6,
+            "httpGet": {
+              "path": "/",
+              "port": 8088,
+              "scheme": "HTTP"
+            },
+            "periodSeconds": 5,
+            "successThreshold": 1,
+            "timeoutSeconds": 3
+          },
+          "readinessProbe": {
+            "failureThreshold": 3,
+            "httpGet": {
+              "path": "/",
+              "port": 8088,
+              "scheme": "HTTP"
+            },
+            "periodSeconds": 5,
+            "successThreshold": 1,
+            "timeoutSeconds": 3
+          }
+        }
+      ]
+    },
+    {
+      "namespace": "lab-payment",
+      "service": "payment",
+      "replicas": 2,
+      "containers": [
+        {
+          "name": "payment",
+          "image": "resilience-lab/service:local",
+          "resources": {
+            "limits": {
+              "cpu": "300m",
+              "memory": "256Mi"
+            },
+            "requests": {
+              "cpu": "100m",
+              "memory": "128Mi"
+            }
+          },
+          "startupProbe": {
+            "failureThreshold": 60,
+            "httpGet": {
+              "path": "/healthz",
+              "port": 8083,
+              "scheme": "HTTP"
+            },
+            "periodSeconds": 5,
+            "successThreshold": 1,
+            "timeoutSeconds": 3
+          },
+          "livenessProbe": {
+            "failureThreshold": 6,
+            "httpGet": {
+              "path": "/healthz",
+              "port": 8083,
+              "scheme": "HTTP"
+            },
+            "initialDelaySeconds": 25,
+            "periodSeconds": 10,
+            "successThreshold": 1,
+            "timeoutSeconds": 3
+          },
+          "readinessProbe": {
+            "failureThreshold": 3,
+            "httpGet": {
+              "path": "/readyz",
+              "port": 8083,
+              "scheme": "HTTP"
+            },
+            "initialDelaySeconds": 5,
+            "periodSeconds": 5,
+            "successThreshold": 1,
+            "timeoutSeconds": 3
+          }
+        }
+      ]
+    },
+    {
+      "namespace": "lab-payment",
+      "service": "pod-kill-proxy",
+      "replicas": 1,
+      "containers": [
+        {
+          "name": "pod-kill-proxy",
+          "image": "resilience-lab/service:local",
+          "resources": {
+            "limits": {
+              "cpu": "100m",
+              "memory": "128Mi"
+            },
+            "requests": {
+              "cpu": "10m",
+              "memory": "64Mi"
+            }
+          },
+          "startupProbe": {
+            "failureThreshold": 60,
+            "httpGet": {
+              "path": "/healthz",
+              "port": 8099,
+              "scheme": "HTTP"
+            },
+            "periodSeconds": 5,
+            "successThreshold": 1,
+            "timeoutSeconds": 3
+          },
+          "livenessProbe": {
+            "failureThreshold": 6,
+            "httpGet": {
+              "path": "/healthz",
+              "port": 8099,
+              "scheme": "HTTP"
+            },
+            "initialDelaySeconds": 25,
+            "periodSeconds": 10,
+            "successThreshold": 1,
+            "timeoutSeconds": 3
+          },
+          "readinessProbe": {
+            "failureThreshold": 3,
+            "httpGet": {
+              "path": "/readyz",
+              "port": 8099,
+              "scheme": "HTTP"
+            },
+            "initialDelaySeconds": 5,
+            "periodSeconds": 5,
+            "successThreshold": 1,
+            "timeoutSeconds": 3
+          }
+        }
+      ]
+    }
+  ]
+}

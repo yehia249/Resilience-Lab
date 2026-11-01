@@ -1,0 +1,25 @@
+global:
+  scrape_interval: 2s
+  evaluation_interval: 2s
+scrape_configs:
+  - job_name: services
+    static_configs:
+      - targets: ['gateway:8080']
+        labels: {service: gateway}
+      - targets: ['catalog:8081']
+        labels: {service: catalog}
+      - targets: ['cart:8082']
+        labels: {service: cart}
+      - targets: ['payment:8083']
+        labels: {service: payment}
+      - targets: ['order-worker:8084']
+        labels: {service: order-worker}
+      - targets: ['chaos-controller:8090']
+        labels: {service: chaos-controller}
+      - targets: ['traffic-generator:8091']
+        labels: {service: traffic-generator}
+      - targets: ['telemetry-api:8095']
+        labels: {service: telemetry-api}
+  - job_name: otel
+    static_configs:
+      - targets: ['otel-collector:8889']

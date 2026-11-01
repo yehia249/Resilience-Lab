@@ -1,0 +1,138 @@
+.mode-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 0 0 15px;
+}
+.mode-row > span {
+  color: var(--muted);
+  font-size: 10px;
+}
+.mode-switch {
+  display: flex;
+  gap: 3px;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--inner);
+}
+.mode-switch button {
+  padding: 7px 13px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 11px;
+}
+.mode-switch button[aria-pressed='true'] {
+  color: var(--text);
+  background: var(--panel-hover);
+  box-shadow: 0 1px 5px #0001;
+}
+.replay-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  border: 1px solid var(--cyan);
+  background: var(--soft-cyan);
+  border-radius: 12px;
+  padding: 17px 19px;
+  margin: 0 0 20px;
+}
+.replay-banner > div:first-child {
+  flex: 1;
+  min-width: 230px;
+}
+.replay-banner strong {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.8;
+  display: block;
+}
+.replay-banner code {
+  background: var(--inner);
+  color: var(--cyan);
+  padding: 2px 5px;
+  border-radius: 4px;
+}
+.replay-banner p {
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 7px;
+}
+.player-controls {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+.player-controls button,
+.player-controls select {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 7px 10px;
+  color: var(--text);
+  font: inherit;
+  font-size: 11px;
+}
+.player-controls label {
+  font-size: 10px;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.player-controls select:focus-visible {
+  outline: 3px solid var(--cyan);
+  outline-offset: 3px;
+}
+.replay-error {
+  width: 100%;
+  color: var(--amber) !important;
+}
+.replay-progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  font-size: 10px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.replay-progress input {
+  accent-color: var(--cyan);
+  flex: 1;
+  min-width: 80px;
+}
+.mode-switch button:focus-visible {
+  outline: 3px solid var(--cyan);
+  outline-offset: 2px;
+}
+@media (max-width: 580px) {
+  .mode-row {
+    flex-wrap: wrap;
+    gap: 9px;
+  }
+  .mode-row > span {
+    font-size: 10px;
+  }
+  .replay-banner {
+    padding: 14px;
+  }
+  .replay-banner strong {
+    font-size: 12px;
+  }
+  .replay-banner p {
+    font-size: 10px;
+  }
+  .mode-switch {
+    width: 100%;
+  }
+  .mode-switch button {
+    flex: 1;
+  }
+}

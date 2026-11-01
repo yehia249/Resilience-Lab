@@ -1,0 +1,37 @@
+name: Publish real replay to GitHub Pages
+on:
+  push:
+    branches: [main, feat/resilience-lab]
+  workflow_dispatch:
+permissions: { contents: read, pages: write, id-token: write }
+concurrency: { group: github-pages, cancel-in-progress: true }
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      VITE_LAB_MODE: replay
+      REQUIRE_FULL_RECORDINGS: 'true'
+      VITE_SITE_BASE: /Resilience-Lab/
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec tsx scripts/validate-recordings.ts
+      - run: pnpm build
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm exec playwright test e2e/replay.spec.ts
+        env: { RUN_REPLAY_E2E: 'true', BASE_URL: 'http://127.0.0.1:4173/Resilience-Lab/' }
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with: { path: apps/web/dist }
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/deploy-pages@v4
+        id: deployment

@@ -1,0 +1,16 @@
+CONTAINER                            REPOSITORY                             TAG                 PLATFORM            IMAGE ID            SIZE                CREATED
+resilience-lab-cart-1                resilience-lab/service                 local               linux/amd64         104cbf24950e        199MB               23 seconds ago
+resilience-lab-catalog-1             resilience-lab/service                 local               linux/amd64         104cbf24950e        199MB               23 seconds ago
+resilience-lab-chaos-controller-1    resilience-lab/service                 local               linux/amd64         104cbf24950e        199MB               23 seconds ago
+resilience-lab-gateway-1             resilience-lab/service                 local               linux/amd64         104cbf24950e        199MB               23 seconds ago
+resilience-lab-jaeger-1              jaegertracing/all-in-one               1.76.0              linux/amd64         b0d7a1169c4c        85.2MB              292 years ago
+resilience-lab-local-adapter-1       node                                   20.20.2-alpine      linux/amd64         11cedc39e663        136MB               292 years ago
+resilience-lab-order-worker-1        resilience-lab/service                 local               linux/amd64         104cbf24950e        199MB               23 seconds ago
+resilience-lab-otel-collector-1      otel/opentelemetry-collector-contrib   0.139.0             linux/amd64         ae16c9ae1901        353MB               292 years ago
+resilience-lab-payment-1             resilience-lab/service                 local               linux/amd64         104cbf24950e        199MB               23 seconds ago
+resilience-lab-postgres-1            postgres                               16.11-alpine        linux/amd64         d7ead3a9d3fe        276MB               292 years ago
+resilience-lab-prometheus-1          prom/prometheus                        v3.7.2              linux/amd64         f9b393a193e8        370MB               292 years ago
+resilience-lab-redis-1               redis                                  7.4.6-alpine        linux/amd64         5f703438f575        41.4MB              292 years ago
+resilience-lab-telemetry-api-1       resilience-lab/service                 local               linux/amd64         104cbf24950e        199MB               23 seconds ago
+resilience-lab-traffic-generator-1   resilience-lab/service                 local               linux/amd64         104cbf24950e        199MB               23 seconds ago
+resilience-lab-web-1                 resilience-lab/web                     local               linux/amd64         97a702404d0c        31.8MB              25 seconds ago

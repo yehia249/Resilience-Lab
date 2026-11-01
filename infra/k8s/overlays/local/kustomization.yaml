@@ -1,0 +1,11 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../base
+images:
+  - name: ghcr.io/yehia249/resilience-lab-service
+    newName: resilience-lab/service
+    newTag: local
+  - name: ghcr.io/yehia249/resilience-lab-web
+    newName: resilience-lab/web
+    newTag: local

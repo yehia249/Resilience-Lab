@@ -1,0 +1,16 @@
+node_modules
+**/node_modules
+.git
+.env
+.env.*
+.local
+**/dist
+**/*.tfstate*
+**/*.tfvars
+.terraform
+**/.terraform
+loadtests
+docs/benchmarks/raw
+**/*.tmp
+playwright-report
+test-results
