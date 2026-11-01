@@ -1,0 +1,139 @@
+name: resilience-lab
+x-env: &env
+  DATABASE_URL: postgres://lab:${POSTGRES_PASSWORD:?Run scripts/setup-env.mjs}@postgres:5432/lab
+  REDIS_URL: redis://redis:6379
+  INTERNAL_TOKEN: ${INTERNAL_TOKEN:?Run scripts/setup-env.mjs}
+  IP_HASH_SECRET: ${IP_HASH_SECRET:?Run scripts/setup-env.mjs}
+  ADMIN_TOKEN: ${ADMIN_TOKEN:?Run scripts/setup-env.mjs}
+  SITE_ORIGIN: ${SITE_ORIGIN:-http://localhost:8088}
+  CHAOS_ENABLED: ${CHAOS_ENABLED:-true}
+  CHAOS_ADAPTER: local
+  OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+  OTEL_METRIC_EXPORT_INTERVAL: '10000'
+  TRUST_PROXY: 'true'
+x-service: &service
+  image: resilience-lab/service:local
+  restart: unless-stopped
+  read_only: true
+  tmpfs: [/tmp]
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  mem_limit: 256m
+  cpus: 0.5
+  depends_on:
+    postgres: { condition: service_healthy }
+    redis: { condition: service_healthy }
+  healthcheck:
+    test:
+      [
+        CMD,
+        node,
+        -e,
+        "fetch('http://localhost:'+process.env.PORT+'/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+      ]
+    interval: 5s
+    timeout: 3s
+    retries: 12
+    start_period: 20s
+services:
+  postgres:
+    image: postgres:16.11-alpine
+    environment:
+      {
+        POSTGRES_USER: lab,
+        POSTGRES_DB: lab,
+        POSTGRES_PASSWORD: '${POSTGRES_PASSWORD:?Run scripts/setup-env.mjs}',
+      }
+    volumes:
+      [pgdata:/var/lib/postgresql/data, ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql:ro]
+    mem_limit: 512m
+    restart: unless-stopped
+    healthcheck:
+      { test: [CMD-SHELL, pg_isready -U lab -d lab], interval: 3s, timeout: 3s, retries: 20, start_period: 120s }
+  redis:
+    image: redis:7.4.6-alpine
+    command: [redis-server, --appendonly, 'yes', --maxmemory, 96mb, --maxmemory-policy, noeviction]
+    volumes: [redisdata:/data]
+    mem_limit: 160m
+    restart: unless-stopped
+    healthcheck: { test: [CMD, redis-cli, ping], interval: 3s, timeout: 3s, retries: 20 }
+  gateway:
+    <<: *service
+    build: { context: ., target: service }
+    environment: { <<: *env, SERVICE: gateway, PORT: 8080 }
+    ports: ['127.0.0.1:8080:8080']
+  catalog:
+    <<: *service
+    environment: { <<: *env, SERVICE: catalog, PORT: 8081 }
+  cart:
+    <<: *service
+    environment: { <<: *env, SERVICE: cart, PORT: 8082 }
+  payment:
+    <<: *service
+    restart: 'no'
+    environment: { <<: *env, SERVICE: payment, PORT: 8083 }
+  order-worker:
+    <<: *service
+    environment: { <<: *env, SERVICE: order-worker, PORT: 8084 }
+  chaos-controller:
+    <<: *service
+    environment: { <<: *env, SERVICE: chaos-controller, PORT: 8090 }
+  traffic-generator:
+    <<: *service
+    environment:
+      { <<: *env, SERVICE: traffic-generator, PORT: 8091, BASELINE_RPS: '${BASELINE_RPS:-25}' }
+  telemetry-api:
+    <<: *service
+    environment: { <<: *env, SERVICE: telemetry-api, PORT: 8095 }
+    ports: ['127.0.0.1:8095:8095']
+  local-adapter:
+    image: node:20.19.5-alpine
+    command: [node, /adapter/server.mjs]
+    user: '0:0'
+    environment: { INTERNAL_TOKEN: '${INTERNAL_TOKEN:?Run scripts/setup-env.mjs}' }
+    volumes:
+      [
+        ./apps/local-adapter/server.mjs:/adapter/server.mjs:ro,
+        /var/run/docker.sock:/var/run/docker.sock,
+      ]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 96m
+  web:
+    image: resilience-lab/web:local
+    build: { context: ., target: web }
+    ports: ['127.0.0.1:8088:8088']
+    depends_on: [gateway, telemetry-api]
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 64m
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.139.0
+    command: [--config=/etc/otel.yaml]
+    volumes: [./infra/observability/otel.yaml:/etc/otel.yaml:ro]
+    mem_limit: 256m
+    cap_drop: [ALL]
+  prometheus:
+    image: prom/prometheus:v3.7.2
+    command:
+      [
+        --config.file=/etc/prometheus/prometheus.yml,
+        --storage.tsdb.retention.time=6h,
+        --storage.tsdb.retention.size=2GB,
+      ]
+    volumes:
+      [./infra/observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro, promdata:/prometheus]
+    mem_limit: 768m
+    cap_drop: [ALL]
+  jaeger:
+    image: jaegertracing/all-in-one:1.76.0
+    environment: { COLLECTOR_OTLP_ENABLED: 'true', MEMORY_MAX_TRACES: '20000' }
+    mem_limit: 512m
+    cap_drop: [ALL]
+volumes:
+  pgdata:
+  redisdata:
+  promdata:
