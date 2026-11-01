@@ -84,9 +84,105 @@
       "duration": 54.406,
       "peakP95": 3360.2830861967145,
       "peakErrorRate": 2.510957025939329
+    },
+    {
+      "type": "SPIKE_TRAFFIC",
+      "duration": 69.581,
+      "peakP95": 107.56232986111097,
+      "peakErrorRate": 0
+    },
+    {
+      "type": "SLOW_DATABASE",
+      "duration": 52.733,
+      "peakP95": 884.9999999999989,
+      "peakErrorRate": 0
+    },
+    {
+      "type": "KILL_PAYMENT",
+      "duration": 32.162,
+      "peakP95": 1521.328501371815,
+      "peakErrorRate": 0
+    },
+    {
+      "type": "ADD_CATALOG_LATENCY",
+      "duration": 52.773,
+      "peakP95": 699.8000000000002,
+      "peakErrorRate": 0
+    },
+    {
+      "type": "SPIKE_TRAFFIC",
+      "duration": 70.609,
+      "peakP95": 77.31707317073173,
+      "peakErrorRate": 0
+    },
+    {
+      "type": "SLOW_DATABASE",
+      "duration": 52.295,
+      "peakP95": 1013.3333333333326,
+      "peakErrorRate": 0
+    },
+    {
+      "type": "KILL_PAYMENT",
+      "duration": 73.579,
+      "peakP95": 2276.3157894736823,
+      "peakErrorRate": 0
+    },
+    {
+      "type": "ADD_CATALOG_LATENCY",
+      "duration": 57.893,
+      "peakP95": 2104.4067174027937,
+      "peakErrorRate": 0
+    },
+    {
+      "type": "SPIKE_TRAFFIC",
+      "duration": 79.147,
+      "peakP95": 160.88304334220163,
+      "peakErrorRate": 0
+    },
+    {
+      "type": "SLOW_DATABASE",
+      "duration": 52.843,
+      "peakP95": 856.2857142857137,
+      "peakErrorRate": 0
+    },
+    {
+      "type": "KILL_PAYMENT",
+      "duration": 49.221,
+      "peakP95": 2226.1363636363562,
+      "peakErrorRate": 0
+    },
+    {
+      "type": "ADD_CATALOG_LATENCY",
+      "duration": 54.461,
+      "peakP95": 882.0000000000008,
+      "peakErrorRate": 0
+    },
+    {
+      "type": "SPIKE_TRAFFIC",
+      "duration": 99.808,
+      "peakP95": 802.2857142857151,
+      "peakErrorRate": 0
+    },
+    {
+      "type": "SLOW_DATABASE",
+      "duration": 54.182,
+      "peakP95": 496.97674775509086,
+      "peakErrorRate": 0
+    },
+    {
+      "type": "KILL_PAYMENT",
+      "duration": 53.218,
+      "peakP95": 3410.132158590309,
+      "peakErrorRate": 0
+    },
+    {
+      "type": "ADD_CATALOG_LATENCY",
+      "duration": 56.462,
+      "peakP95": 1738.207547169811,
+      "peakErrorRate": 0
     }
   ],
-  "measuredAt": "2026-11-01T16:46:40.120Z",
+  "measuredAt": "2026-11-01T17:14:58.795Z",
   "target": "http://localhost:8089",
   "expectedRuns": 40,
   "complete": false

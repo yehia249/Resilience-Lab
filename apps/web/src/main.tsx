@@ -520,7 +520,7 @@ function App() {
         </span>
       </div>
       {mode === 'replay' && (
-        <aside className="replay-banner" role="status">
+        <div className="replay-banner" role="status">
           <div>
             <strong>
               Replay of a real recording from the live system, captured on{' '}
@@ -555,7 +555,7 @@ function App() {
             </label>
           </div>
           {replay.error && <p className="replay-error">{replay.error}</p>}
-        </aside>
+        </div>
       )}
       {path === '/engineering' ? (
         <Engineering snapshot={snapshot} bench={bench} mode={mode} />
@@ -583,7 +583,7 @@ function App() {
             </aside>
           )}
           {!connected && mode === 'live' && (
-            <aside className="offline" role="status">
+            <div className="offline" role="status">
               <strong>
                 {snapshot ? 'Connection lost. Reconnecting…' : 'The lab backend is offline.'}
               </strong>
@@ -606,7 +606,7 @@ function App() {
               >
                 View architecture & deployment status ↗
               </a>
-            </aside>
+            </div>
           )}
           {recovered && (
             <div className="recovery" role="status" aria-live="polite">
@@ -1113,7 +1113,7 @@ function Engineering({
             ],
             [
               'Zero-dollar budget',
-              'Infrastructure must be free-tier eligible; cloud apply requires an approved resource plan.',
+              'Backend services run on the existing machine. GitHub Pages serves clearly labelled recordings; no cloud account is required.',
             ],
             [
               'Single-node trade-offs',
@@ -1139,13 +1139,23 @@ function Engineering({
           The payment processor is simulated and no money moves. Database slowdown is an explicit
           delay in the query wrapper. Synthetic shoppers create real requests. CPU, replica and
           recovery figures only appear when the real infrastructure reports them. A single-node
-          cluster cannot survive a host outage. The dashboard has no fake demo mode.
+          cluster cannot survive a host outage. Public replay shows captured measurements and never
+          submits live requests.
         </p>
         <h3>Demo recording</h3>
         <p>
-          A recording has not been provided yet. The repository includes a 90-second recording
-          script and click path. No placeholder video is presented as a working demo.
+          A browser walkthrough of recorded local experiments, played at 4× speed. This is Replay,
+          with its capture banner visible; it is not a live fault injection. No audio.
         </p>
+        <video
+          controls
+          preload="none"
+          aria-label="Walkthrough of recorded local fault experiments"
+          style={{ width: '100%', borderRadius: 12 }}
+        >
+          <source src={BASE + 'demo.webm'} type="video/webm" />
+          <a href={BASE + 'demo.webm'}>Download the recorded walkthrough</a>
+        </video>
       </section>
     </main>
   );

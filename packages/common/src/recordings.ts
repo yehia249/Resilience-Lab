@@ -14,7 +14,7 @@ export const Recording = z.object({
   id: z.string(),
   type: FaultType,
   environment: z.literal('k3d'),
-  capturedAt: z.string(),
+  capturedAt: z.iso.datetime(),
   source: z.literal('real-local-system'),
   faultStartedAt: z.number(),
   recoverySeconds: z.number().nonnegative(),
@@ -31,7 +31,7 @@ export const Recording = z.object({
   products: z.array(Product),
   frames: z.array(Snapshot).min(2),
   checkouts: z.array(RecordedCheckout),
-  traces: z.array(RecordedTrace),
+  traces: z.array(RecordedTrace).min(1),
   collectionErrors: z.array(z.object({ ts: z.number(), message: z.string() })),
 });
 export type Recording = z.infer<typeof Recording>;
@@ -45,7 +45,7 @@ export const RecordingSummary = Recording.pick({
   peakErrorRate: true,
   baselineRps: true,
   maxRps: true,
-}).extend({ file: z.string().regex(/^recordings\/[A-Za-z0-9_./-]+\.json$/) });
+}).extend({ file: z.string().regex(/^recordings\/[A-Za-z0-9_-]+\.json$/) });
 export type RecordingSummary = z.infer<typeof RecordingSummary>;
 export const RecordingIndex = z.object({
   version: z.literal(1),

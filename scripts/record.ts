@@ -21,13 +21,22 @@ if (!['localhost', '127.0.0.1'].includes(new URL(base).hostname) || new URL(base
 const repeats = Number(process.env.RECORD_REPEATS ?? 10);
 if (repeats < 10) throw Error('At least ten recordings per fault are required');
 function local(args: string[], input?: string) {
-  return execFileSync(
-    process.platform === 'win32' ? 'wsl' : args[0],
-    process.platform === 'win32'
-      ? ['-d', 'ResilienceLab', '--cd', process.cwd(), '--', ...args]
-      : args.slice(1),
-    { encoding: 'utf8', input, stdio: ['pipe', 'pipe', 'pipe'] },
-  ).trim();
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      return execFileSync(
+        process.platform === 'win32' ? 'wsl' : args[0],
+        process.platform === 'win32'
+          ? ['-d', 'ResilienceLab', '--cd', process.cwd(), '--', ...args]
+          : args.slice(1),
+        { encoding: 'utf8', input, stdio: ['pipe', 'pipe', 'pipe'], timeout: 30000 },
+      ).trim();
+    } catch {
+      if (attempt === 2)
+        throw Error(`Local tool failed after bounded retries: ${args[0]} ${args[1]}`);
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 2000);
+    }
+  }
+  throw Error('Local tool failed');
 }
 if (local(['kubectl', 'config', 'current-context']) !== 'k3d-resilience-lab')
   throw Error('Wrong Kubernetes context');

@@ -19,6 +19,8 @@ record: bench
 replay:
 	VITE_LAB_MODE=replay pnpm dev
 k3d-up:
+	node scripts/setup-env.mjs
+	docker compose build gateway web
 	bash scripts/k3d-up.sh
 k3d-down:
 	k3d cluster delete resilience-lab

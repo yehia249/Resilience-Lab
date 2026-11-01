@@ -20,7 +20,7 @@ make test                # lint, types, unit tests and build
 make k3d-up              # local Kubernetes, HPA and dashboard on :8089
 ```
 
-Compose: http://localhost:8088. Kubernetes: http://localhost:8089. Compose has fixed replicas; actual autoscaling uses k3d. See [operation and Pages delivery](docs/DEPLOY.md) and the [runbook](docs/RUNBOOK.md).
+Compose: http://localhost:8088. Kubernetes: http://localhost:8089. Compose has fixed replicas; actual autoscaling uses k3d. On this HDD-backed workstation, stop Compose with docker compose stop before running k3d experiments; concurrent cold starts can disrupt recordings. See [operation and Pages delivery](docs/DEPLOY.md) and the [runbook](docs/RUNBOOK.md).
 
 ## Reproduce recordings
 
@@ -38,7 +38,7 @@ The recorder targets the named local cluster, runs four faults ten times each an
 ```sh
 pnpm exec playwright install chromium
 pnpm test:e2e
-RUN_K8S_E2E=true BASE_URL=http://localhost:8089 pnpm test:e2e
+RUN_CHAOS_E2E=true RUN_HPA_E2E=true BASE_URL=http://localhost:8089 pnpm test:e2e
 VITE_LAB_MODE=replay VITE_SITE_BASE=/Resilience-Lab/ pnpm build
 RUN_REPLAY_E2E=true BASE_URL=http://127.0.0.1:4173/Resilience-Lab/ pnpm exec playwright test e2e/replay.spec.ts
 ```

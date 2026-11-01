@@ -1,18 +1,35 @@
 import { readFile } from 'node:fs/promises';
-import { Recording, RecordingIndex } from '../packages/common/src/recordings';
+import { Recording, RecordingIndex, RecordingSummary } from '../packages/common/src/recordings';
 import { FaultType } from '../packages/common/src/schemas';
 const root = 'apps/web/public/';
 const index = RecordingIndex.parse(
   JSON.parse(await readFile(root + 'recordings/index.json', 'utf8')),
 );
+if (new Set(index.runs.map((r) => r.id)).size !== index.runs.length)
+  throw Error('Recording IDs must be unique; duplicate files cannot count as independent runs');
+const evidenceIndex = RecordingIndex.parse(
+  JSON.parse(await readFile('docs/benchmarks/recordings/index.json', 'utf8')),
+);
+if (JSON.stringify(evidenceIndex) !== JSON.stringify(index))
+  throw Error('Evidence and public indexes differ');
 for (const summary of index.runs) {
   const recording = Recording.parse(JSON.parse(await readFile(root + summary.file, 'utf8')));
+  const evidence = Recording.parse(
+    JSON.parse(await readFile('docs/benchmarks/' + summary.file, 'utf8')),
+  );
+  if (JSON.stringify(evidence) !== JSON.stringify(recording))
+    throw Error('Public replay differs from raw evidence');
   if (
     recording.id !== summary.id ||
     recording.type !== summary.type ||
     recording.recoverySeconds !== summary.recoverySeconds
   )
     throw Error('Recording manifest mismatch');
+  if (
+    JSON.stringify(RecordingSummary.parse({ ...recording, file: summary.file })) !==
+    JSON.stringify(summary)
+  )
+    throw Error('Recording summary must match the measured capture');
   if (!recording.traces.length) throw Error(`${recording.id}: no real OTel trace captured`);
   if (
     !recording.frames.some((f) => f.fault?.type === recording.type) &&

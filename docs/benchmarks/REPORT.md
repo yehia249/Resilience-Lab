@@ -1,13 +1,13 @@
 # Real local recordings
 
-Captured on 2026-11-01T16:46:40.120Z. Completed 14/40 required runs. Target: http://localhost:8089 (k3d).
+Captured on 2026-11-01T17:14:58.795Z. Completed 30/40 required runs. Target: http://localhost:8089 (k3d).
 
 | Fault | Runs | Median recovery s | Sample p95 recovery s |
 |---|---:|---:|---:|
-| KILL_PAYMENT | 4 | 51.784 | 118.945 |
-| ADD_CATALOG_LATENCY | 4 | 61.024 | 120.572 |
-| SPIKE_TRAFFIC | 3 | 70.798 | 78.659 |
-| SLOW_DATABASE | 3 | 70.573 | 245.202 |
+| KILL_PAYMENT | 8 | 51.219 | 118.945 |
+| ADD_CATALOG_LATENCY | 8 | 55.462 | 120.572 |
+| SPIKE_TRAFFIC | 7 | 70.798 | 99.808 |
+| SLOW_DATABASE | 7 | 53.205 | 245.202 |
 
 Every JSON file contains actual timestamped metrics, topology, request timings, events and retrieved normalized OpenTelemetry spans. Payment processing is deliberately simulated; requests, faults, persistence and timings are real. No missing measurements are filled with generated values.
 
