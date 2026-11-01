@@ -758,7 +758,7 @@ function App() {
                   <h2>What the system is doing</h2>
                   <span className="live-dot" />
                 </div>
-                <div className="event-list" role="log" aria-live="polite" aria-relevant="additions">
+                <div className="event-list" role="log" tabIndex={0} aria-label="Live system events" aria-live="polite" aria-relevant="additions">
                   {snapshot?.events.length ? (
                     snapshot.events.map((e, i) => (
                       <div className={'event ' + e.level} key={e.ts + e.kind + i}>
