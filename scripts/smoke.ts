@@ -51,18 +51,28 @@ while (snapshots < 2) {
 await reader.cancel();
 let traceSpans: number | null = null;
 let traceServices: string[] | null = null;
+let observedTrace: unknown = null;
 if (process.env.JAEGER_URL) {
   for (let attempt = 0; attempt < 20; attempt++) {
     const r = await fetch(process.env.JAEGER_URL + '/api/traces/' + checkoutTraceId, {
       signal: AbortSignal.timeout(5000),
     });
     const data = (await r.json()) as {
-      data?: { spans?: unknown[]; processes?: Record<string, { serviceName: string }> }[];
+      data?: {
+        spans?: { operationName?: string }[];
+        processes?: Record<string, { serviceName: string }>;
+      }[];
     };
     const count = data.data?.[0]?.spans?.length ?? 0;
     const services = [
       ...new Set(Object.values(data.data?.[0]?.processes ?? {}).map((p) => p.serviceName)),
     ];
+    observedTrace = {
+      traceId: checkoutTraceId,
+      spans: count,
+      services,
+      operations: [...new Set(data.data?.[0]?.spans?.map((s) => s.operationName) ?? [])],
+    };
     if (count > 0 && services.includes('gateway') && services.length >= 2) {
       traceSpans = count;
       traceServices = services;
@@ -71,7 +81,10 @@ if (process.env.JAEGER_URL) {
     await new Promise((resolve) => setTimeout(resolve, 1000));
   }
   if (!traceSpans)
-    throw Error('No distributed checkout trace reached Jaeger across multiple services');
+    throw Error(
+      'No distributed checkout trace reached Jaeger across multiple services: ' +
+        JSON.stringify(observedTrace),
+    );
 }
 console.log(
   JSON.stringify(

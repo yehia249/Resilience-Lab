@@ -37,6 +37,8 @@ test('public replay is labelled, uses real files, plays each fault and never con
   await page.getByRole('link', { name: 'The lab', exact: true }).click();
   for (const colorScheme of ['light', 'dark'] as const) {
     await page.emulateMedia({ colorScheme });
+    // Let the 180 ms theme transitions settle before measuring static text contrast.
+    await page.waitForTimeout(250);
     expect(
       (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze())
         .violations,
