@@ -146,7 +146,7 @@ export async function telemetry() {
             `1000 * histogram_quantile(${p}, sum by (le) (rate(${base}_bucket{${labels}}[15s])))`,
         ),
         `1000 * histogram_quantile(0.95,sum by (le,service) (rate(${base}_bucket[15s])))`,
-        `max(breaker_state{service="gateway"})`,
+        `max(breaker_state{service="gateway"} == 1) or max(breaker_state{service="gateway"} == 2) or max(breaker_state{service="gateway"} == 0)`,
       ];
       const [vectors, topo, rawFault, cooldown, events, rawTrace, pending, rows] =
         await Promise.all([

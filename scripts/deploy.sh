@@ -17,20 +17,16 @@ kubectl kustomize "infra/k8s/overlays/$overlay" | sed "s/REPLACE_HOST/$LAB_HOST/
 # Resolve API-server addresses for NetworkPolicy under both service and endpoint DNAT behavior.
 task_api_ip=$(kubectl get endpoints kubernetes -n default -o jsonpath='{.subsets[0].addresses[0].ip}')
 task_api_service_ip=$(kubectl get service kubernetes -n default -o jsonpath='{.spec.clusterIP}')
-python3 - "$task_manifest_file" "$task_api_ip" "$task_api_service_ip" <<'PY'
-import sys
-p,endpoint,service=sys.argv[1:]
-s=open(p).read().replace('10.43.0.1/32',service+'/32')
-# Permit API endpoint too; scoped to telemetry and payment kill proxy only.
-s=s.replace('cidr: '+service+'/32','cidr: '+service+'/32\n      - ipBlock:\n          cidr: '+endpoint+'/32')
-open(p,'w').write(s)
-PY
+[[ "$task_api_ip" =~ ^[0-9.]+$ && "$task_api_service_ip" =~ ^[0-9.]+$ ]] || exit 1
 if [[ "$overlay" == prod ]]; then
   : "${LAB_IMAGE_TAG:?Set LAB_IMAGE_TAG to the reviewed Git commit SHA}"
   [[ "$LAB_IMAGE_TAG" =~ ^[a-f0-9]{40}$ ]] || { echo 'Image tag must be a full commit SHA'; exit 1; }
   sed -i "s/resilience-lab-service:main/resilience-lab-service:$LAB_IMAGE_TAG/g;s/resilience-lab-web:main/resilience-lab-web:$LAB_IMAGE_TAG/g" "$task_manifest_file"
 fi
 kubectl apply -f "$task_manifest_file"
+for ns in lab lab-payment; do
+ kubectl patch networkpolicy kube-api -n "$ns" --type=merge -p "{\"spec\":{\"egress\":[{\"to\":[{\"ipBlock\":{\"cidr\":\"$task_api_ip/32\"}},{\"ipBlock\":{\"cidr\":\"$task_api_service_ip/32\"}}],\"ports\":[{\"port\":443},{\"port\":6443}]}]}}"
+done
 if [[ "$overlay" == prod ]]; then
  kubectl annotate ingress web -n lab traefik.ingress.kubernetes.io/router.entrypoints=websecure traefik.ingress.kubernetes.io/router.tls=true traefik.ingress.kubernetes.io/router.tls.certresolver=lab --overwrite
 fi

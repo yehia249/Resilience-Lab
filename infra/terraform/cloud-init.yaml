@@ -1,6 +1,6 @@
 #cloud-config
 package_update: true
-packages: [curl, git, jq, make]
+packages: [curl, git, jq, make, python3]
 write_files:
   - path: /etc/sysctl.d/90-resilience-lab.conf
     content: |
@@ -22,7 +22,6 @@ write_files:
       spec:
         valuesContent: |-
           additionalArguments:
-            - "--certificatesresolvers.lab.acme.email=admin@example.invalid"
             - "--certificatesresolvers.lab.acme.storage=/data/acme.json"
             - "--certificatesresolvers.lab.acme.httpchallenge.entrypoint=web"
           persistence:
@@ -37,6 +36,9 @@ write_files:
 runcmd:
   - swapoff -a
   - sysctl --system
+  - curl -fsSL https://deb.nodesource.com/setup_20.x -o /root/setup-node.sh
+  - [bash, /root/setup-node.sh]
+  - [apt-get, install, -y, nodejs]
   - curl -sfL https://get.k3s.io -o /root/install-k3s.sh
   - [sh, -c, 'INSTALL_K3S_VERSION=v1.33.5+k3s1 sh /root/install-k3s.sh']
   - git clone https://github.com/yehia249/Resilience-Lab.git /opt/resilience-lab

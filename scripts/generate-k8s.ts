@@ -83,7 +83,7 @@ function deployment(name: string, image: string, port: number, o: DeploymentOpti
       spec: {
         replicas: o.replicas ?? 1,
         selector: { matchLabels: { app: name } },
-        strategy: { type: 'RollingUpdate', rollingUpdate: { maxUnavailable: 0, maxSurge: 1 } },
+        strategy: ['postgres','redis','prometheus'].includes(name)?{type:'Recreate'}:{ type: 'RollingUpdate', rollingUpdate: { maxUnavailable: 0, maxSurge: 1 } },
         template: {
           metadata: { labels: { app: name } },
           spec: {
@@ -273,6 +273,7 @@ deployment('redis', 'redis:7.4.6-alpine', 6379, {
   volumeMounts: [{ name: 'data', mountPath: '/data' }],
 });
 deployment('prometheus', 'prom/prometheus:v3.7.2', 9090, {
+  serviceAccountName: 'prometheus',
   uid: 65534,
   requests: { cpu: '200m', memory: '512Mi' },
   limits: { cpu: '500m', memory: '768Mi' },
@@ -331,10 +332,9 @@ const prom = resources.find(
     (r as { kind: string; metadata: { name: string } }).kind === 'ConfigMap' &&
     (r as { metadata: { name: string } }).metadata.name === 'prometheus-config',
 ) as { data: Record<string, string> };
-prom.data['prometheus.yml'] = prom.data['prometheus.yml'].replace(
-  'otel-collector:8889',
-  'otel-metrics:8889',
-);
+prom.data['prometheus.yml'] = stringify({global:{scrape_interval:'2s',evaluation_interval:'2s'},scrape_configs:[{job_name:'services',kubernetes_sd_configs:[{role:'pod',namespaces:{names:['lab','lab-payment']}}],relabel_configs:[{source_labels:['__meta_kubernetes_pod_label_app'],action:'keep',regex:appConfigs.map(v=>v[0]).join('|')},{source_labels:['__meta_kubernetes_pod_label_app'],target_label:'service'},{source_labels:['__meta_kubernetes_pod_phase'],action:'keep',regex:'Running'}]},{job_name:'otel',static_configs:[{targets:['otel-metrics:8889']}]}]});
+add('ServiceAccount','prometheus',{});
+for(const ns of ['lab','lab-payment']){add('Role','prometheus-read',{rules:[{apiGroups:[''],resources:['pods'],verbs:['get','list','watch']}]},ns,'rbac.authorization.k8s.io/v1');add('RoleBinding','prometheus-read',{subjects:[{kind:'ServiceAccount',name:'prometheus',namespace:'lab'}],roleRef:{kind:'Role',name:'prometheus-read',apiGroup:'rbac.authorization.k8s.io'}},ns,'rbac.authorization.k8s.io/v1');}
 deployment('web', 'ghcr.io/yehia249/resilience-lab-web:main', 8088, {
   uid: 101,
   requests: { cpu: '20m', memory: '32Mi' },
@@ -560,7 +560,7 @@ for (const ns of ['lab', 'lab-payment'])
     'kube-api',
     {
       spec: {
-        podSelector: { matchLabels: { app: ns === 'lab' ? 'telemetry-api' : 'pod-kill-proxy' } },
+        podSelector: { matchExpressions: [{key:'app',operator:'In',values:ns==='lab'?['telemetry-api','prometheus']:['pod-kill-proxy']}] },
         policyTypes: ['Egress'],
         egress: [
           { to: [{ ipBlock: { cidr: '10.43.0.1/32' } }], ports: [{ port: 443 }, { port: 6443 }] },

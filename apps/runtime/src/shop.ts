@@ -23,7 +23,7 @@ export async function catalog() {
       await sleep(300 + Math.random() * 200);
   });
   app.get('/products', async () => {
-    const { rows } = await sql('SELECT id,name,price,icon FROM products ORDER BY name');
+    const { rows } = await sql('SELECT id,name,price,icon FROM products ORDER BY id');
     return Product.array().parse(rows);
   });
   app.get<{ Params: { id: string } }>('/products/:id', async (req, reply) => {

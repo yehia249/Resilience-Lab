@@ -3,7 +3,6 @@ import { server, redis } from './platform';
 import { Product } from '../../../packages/common/src/schemas';
 export async function traffic() {
   const { app, listen } = await server(8091);
-  await listen();
   const base = process.env.GATEWAY_URL ?? 'http://gateway:8080';
   let inFlight = 0;
   let tokens = 0;
@@ -67,4 +66,5 @@ export async function traffic() {
     clearInterval(ticker);
     clearInterval(update);
   });
+  await listen();
 }

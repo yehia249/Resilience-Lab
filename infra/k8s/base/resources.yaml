@@ -83,32 +83,34 @@ metadata:
   name: prometheus-config
   namespace: lab
 data:
-  prometheus.yml: |
+  prometheus.yml: >
     global:
       scrape_interval: 2s
       evaluation_interval: 2s
     scrape_configs:
       - job_name: services
-        static_configs:
-          - targets: ['gateway:8080']
-            labels: {service: gateway}
-          - targets: ['catalog:8081']
-            labels: {service: catalog}
-          - targets: ['cart:8082']
-            labels: {service: cart}
-          - targets: ['payment:8083']
-            labels: {service: payment}
-          - targets: ['order-worker:8084']
-            labels: {service: order-worker}
-          - targets: ['chaos-controller:8090']
-            labels: {service: chaos-controller}
-          - targets: ['traffic-generator:8091']
-            labels: {service: traffic-generator}
-          - targets: ['telemetry-api:8095']
-            labels: {service: telemetry-api}
+        kubernetes_sd_configs:
+          - role: pod
+            namespaces:
+              names:
+                - lab
+                - lab-payment
+        relabel_configs:
+          - source_labels:
+              - __meta_kubernetes_pod_label_app
+            action: keep
+            regex: gateway|catalog|cart|payment|order-worker|chaos-controller|traffic-generator|telemetry-api
+          - source_labels:
+              - __meta_kubernetes_pod_label_app
+            target_label: service
+          - source_labels:
+              - __meta_kubernetes_pod_phase
+            action: keep
+            regex: Running
       - job_name: otel
         static_configs:
-          - targets: ['otel-metrics:8889']
+          - targets:
+              - otel-metrics:8889
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -1175,10 +1177,7 @@ spec:
     matchLabels:
       app: postgres
   strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 0
-      maxSurge: 1
+    type: Recreate
   template:
     metadata:
       labels:
@@ -1277,10 +1276,7 @@ spec:
     matchLabels:
       app: redis
   strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 0
-      maxSurge: 1
+    type: Recreate
   template:
     metadata:
       labels:
@@ -1370,16 +1366,14 @@ spec:
     matchLabels:
       app: prometheus
   strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 0
-      maxSurge: 1
+    type: Recreate
   template:
     metadata:
       labels:
         app: prometheus
     spec:
-      automountServiceAccountToken: false
+      automountServiceAccountToken: true
+      serviceAccountName: prometheus
       securityContext:
         runAsNonRoot: true
         runAsUser: 65534
@@ -1637,6 +1631,70 @@ spec:
   ports:
     - port: 8889
       targetPort: 8889
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: prometheus
+  namespace: lab
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: prometheus-read
+  namespace: lab
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+    verbs:
+      - get
+      - list
+      - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: prometheus-read
+  namespace: lab
+subjects:
+  - kind: ServiceAccount
+    name: prometheus
+    namespace: lab
+roleRef:
+  kind: Role
+  name: prometheus-read
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: prometheus-read
+  namespace: lab-payment
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+    verbs:
+      - get
+      - list
+      - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: prometheus-read
+  namespace: lab-payment
+subjects:
+  - kind: ServiceAccount
+    name: prometheus
+    namespace: lab
+roleRef:
+  kind: Role
+  name: prometheus-read
+  apiGroup: rbac.authorization.k8s.io
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -2857,8 +2915,12 @@ metadata:
   namespace: lab
 spec:
   podSelector:
-    matchLabels:
-      app: telemetry-api
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - telemetry-api
+          - prometheus
   policyTypes:
     - Egress
   egress:
@@ -2876,8 +2938,11 @@ metadata:
   namespace: lab-payment
 spec:
   podSelector:
-    matchLabels:
-      app: pod-kill-proxy
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - pod-kill-proxy
   policyTypes:
     - Egress
   egress:
