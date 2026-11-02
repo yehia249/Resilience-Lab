@@ -23,7 +23,7 @@ jobs:
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm exec playwright test e2e/replay.spec.ts
         env: { RUN_REPLAY_E2E: 'true', BASE_URL: 'http://127.0.0.1:4173/Resilience-Lab/' }
-      - uses: actions/configure-pages@v5
+      - uses: actions/configure-pages@v6
       - uses: actions/upload-pages-artifact@v3
         with: { path: apps/web/dist }
   deploy:
