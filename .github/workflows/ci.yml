@@ -84,6 +84,20 @@ jobs:
         run: |
           curl -fsSL https://github.com/yannh/kubeconform/releases/download/v0.7.0/kubeconform-linux-amd64.tar.gz | tar xz kubeconform
           kubectl kustomize infra/k8s/overlays/prod | ./kubeconform -strict -summary
+      - name: Capture cluster state
+        if: always()
+        run: |
+          kubectl get pods,hpa -A -o wide > cluster-state.log
+          kubectl get events -A --sort-by=.lastTimestamp >> cluster-state.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cluster-verification
+          path: |
+            cluster-state.log
+            playwright-report/
+            test-results/
+          retention-days: 7
   images:
     needs: [checks, integration, cluster, container-security]
     if: github.event_name == 'push'

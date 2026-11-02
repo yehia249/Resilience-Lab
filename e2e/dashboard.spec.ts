@@ -1,5 +1,15 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
+const execute = promisify(execFile);
+async function localKubectl(...args: string[]) {
+  return execute(
+    process.platform === 'win32' ? 'wsl' : 'kubectl',
+    process.platform === 'win32' ? ['-d', 'ResilienceLab', '--exec', 'kubectl', ...args] : args,
+    { timeout: 30000 },
+  );
+}
 for (const colorScheme of ['light', 'dark'] as const) {
   test(`dashboard, engineering and accessibility (${colorScheme})`, async ({ page }) => {
     await page.emulateMedia({ colorScheme });
@@ -99,25 +109,45 @@ test('traffic spike produces real Kubernetes scale-up', async ({ page, request }
     process.env.RUN_HPA_E2E !== 'true',
     'Requires Kubernetes metrics-server; Compose has no autoscaler',
   );
+  test.setTimeout(600000);
+  const context = await localKubectl('config', 'current-context');
+  expect(context.stdout.trim()).toBe('k3d-resilience-lab');
   await page.goto('/');
   await expect(page.locator('.connection')).toContainText('SYSTEM CONNECTED', { timeout: 60000 });
   await expect(page.getByRole('button', { name: /Spike traffic/ })).toBeEnabled({
     timeout: 180000,
   });
-  const before = await (await request.get('/v1/snapshot')).json();
-  const count = before.services.reduce(
-    (a: number, s: { desired: number }) => a + (s.desired ?? 0),
-    0,
+  // The preceding checkout burst can leave every HPA at its ceiling for the
+  // downscale stabilization window. Let real CPU-based downscaling establish
+  // headroom; never force application replica counts or alter HPA thresholds.
+  const targets = new Set(['gateway', 'catalog', 'cart']);
+  const desired = (snapshot: { services: { name: string; desired: number }[] }) =>
+    snapshot.services.filter((s) => targets.has(s.name)).reduce((total, s) => total + s.desired, 0);
+  let count = 0;
+  await localKubectl('scale', 'deployment/traffic-generator', '-n', 'lab', '--replicas=0');
+  try {
+    await expect
+      .poll(async () => desired(await (await request.get('/v1/snapshot')).json()), {
+        timeout: 360000,
+        intervals: [5000],
+        message: 'CPU-based HPAs must return to their minimum before the spike',
+      })
+      .toBe(5);
+    count = desired(await (await request.get('/v1/snapshot')).json());
+    expect(count).toBe(5);
+  } finally {
+    await localKubectl('scale', 'deployment/traffic-generator', '-n', 'lab', '--replicas=1');
+  }
+  const accepted = page.waitForResponse(
+    (r) => r.url().endsWith('/api/chaos') && r.request().method() === 'POST',
   );
   await page.getByRole('button', { name: /Spike traffic/ }).click();
+  expect((await accepted).status()).toBe(200);
   await expect
     .poll(
       async () => {
         const current = await (await request.get('/v1/snapshot')).json();
-        return current.services.reduce(
-          (a: number, s: { desired: number }) => a + (s.desired ?? 0),
-          0,
-        );
+        return desired(current);
       },
       { timeout: 120000 },
     )

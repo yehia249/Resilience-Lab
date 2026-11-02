@@ -1,0 +1,17 @@
+{
+  "target": "http://localhost:8089",
+  "products": 24,
+  "orderStatus": "confirmed",
+  "checkoutMs": 982.9982039999995,
+  "telemetryTs": 1793561187539,
+  "liveSseSnapshots": 2,
+  "traceSpans": 22,
+  "traceId": "798f7471f031729e724beff7789563f5",
+  "traceServices": [
+    "gateway",
+    "payment",
+    "cart",
+    "catalog"
+  ],
+  "measuredAt": "2026-11-01T19:26:33.675Z"
+}
