@@ -47,7 +47,7 @@ export function useReplay(enabled: boolean) {
           parsed.runs
             .filter((r) => r.type === 'KILL_PAYMENT')
             .sort((a, b) => b.capturedAt.localeCompare(a.capturedAt))[0] ?? parsed.runs.at(-1);
-        if (latest) void open(latest, false);
+        if (latest) void open(latest, true);
         else setError('Real recordings are still being captured. No sample data is generated.');
       })
       .catch((e) => {
@@ -61,7 +61,7 @@ export function useReplay(enabled: boolean) {
     if (!enabled || !playing || !recording) return;
     const next = recording.frames[position + 1];
     if (!next) {
-      setPlaying(false);
+      setPosition(0);
       return;
     }
     const ms = Math.max(20, (next.ts - recording.frames[position].ts) / speed);

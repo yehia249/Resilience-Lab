@@ -6,6 +6,8 @@ A small shop you can break: real HTTP services, Postgres, Redis Streams, circuit
 
 The public frontend defaults to **Replay**. Each fault button selects an actual local recording. Metrics, topology, checkout results, traces and events come from those captures. The banner identifies the capture date; replay never sends transactions or faults to a backend. Missing data stays unavailable. The index reports completed runs; the target is ten per fault.
 
+Recordings start automatically and loop. The public dashboard has no Live/local tab or shop. Its recovery button expands an explanation in place. Latency is measured inside the recorded test system; it is not the visitor's connection speed.
+
 Live mode runs entirely on your machine. No cloud account, card, external backend or signup is required. The payment processor is explicitly simulated; HTTP calls, SQL, queues, faults and timings are real.
 
 ## Run locally

@@ -13,9 +13,29 @@ test('public replay is labelled, uses real files, plays each fault and never con
   await expect(page.locator('.replay-banner')).toContainText(
     'Replay of a real recording from the live system, captured on',
   );
-  await expect(page.locator('.connection')).toContainText('RECORDED SYSTEM SNAPSHOT');
+  await expect(page.locator('.connection')).toContainText('REPLAYING A REAL CAPTURE');
   await expect(page.locator('.replay-banner')).toContainText('make dev');
   await expect(page.locator('.stat strong').first()).not.toContainText('—');
+  await expect(page.getByRole('button', { name: /Live locally|Live system/ })).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Try the shop' })).toHaveCount(0);
+  await expect(page.getByText('It does not measure your internet connection.')).toBeVisible();
+  const points = await page
+    .locator('.chart polyline')
+    .evaluateAll((lines) => lines.map((line) => line.getAttribute('points')));
+  await expect
+    .poll(() =>
+      page
+        .locator('.chart polyline')
+        .evaluateAll((lines) => lines.map((line) => line.getAttribute('points'))),
+    )
+    .not.toEqual(points);
+  await page.getByRole('button', { name: /How does recovery work/ }).click();
+  await expect(page.getByRole('heading', { name: 'How the system recovers' })).toBeVisible();
+  await expect(page.locator('#recovery-explanation')).toContainText(
+    'ten consecutive healthy samples',
+  );
+  await page.getByRole('button', { name: /How does recovery work/ }).click();
+  await expect(page.locator('#recovery-explanation')).toBeHidden();
   for (const [button, type] of [
     ['Kill payment service', 'KILL PAYMENT'],
     ['Add latency', 'ADD CATALOG LATENCY'],
@@ -27,8 +47,9 @@ test('public replay is labelled, uses real files, plays each fault and never con
     await expect(page.locator('.connection')).toContainText('REPLAYING A REAL CAPTURE');
   }
   await page.getByRole('button', { name: 'Pause', exact: true }).click();
-  await page.getByRole('button', { name: 'View a recorded checkout' }).click();
-  await expect(page.locator('.shop-result')).toContainText('Recorded checkout:');
+  await expect(page.getByRole('button', { name: 'Play', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Restart', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Pause', exact: true })).toBeVisible();
   expect(backendCalls).toEqual([]);
   await page.getByRole('link', { name: 'Engineering' }).click();
   await expect(page.getByRole('heading', { name: 'Under the hood' })).toBeVisible();

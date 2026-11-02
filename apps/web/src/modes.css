@@ -94,6 +94,23 @@
   width: 100%;
   color: var(--amber) !important;
 }
+.recovery-explanation {
+  margin-top: 14px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--muted);
+}
+.recovery-explanation h3 {
+  margin: 0 0 10px;
+  font-size: 14px;
+  color: var(--text);
+}
+.recovery-explanation p:last-child {
+  margin-bottom: 0;
+}
 .replay-progress {
   display: flex;
   align-items: center;

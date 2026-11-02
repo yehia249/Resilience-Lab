@@ -181,6 +181,7 @@ function App() {
   const replay = useReplay(mode === 'replay');
   const [theme, setTheme] = useState(saved('lab.theme') ?? 'system');
   const [tour, setTour] = useState(saved('lab.tour') !== 'hidden');
+  const [recoveryHelp, setRecoveryHelp] = useState(false);
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
   const [samples, setSamples] = useState<Sample[]>([]);
   const [connected, setConnected] = useState(false);
@@ -505,14 +506,18 @@ function App() {
         </div>
       </header>
       <div className="mode-row">
-        <div className="mode-switch" role="group" aria-label="Laboratory mode">
-          <button aria-pressed={mode === 'replay'} onClick={() => switchMode('replay')}>
-            Replay recordings
-          </button>
-          <button aria-pressed={mode === 'live'} onClick={() => switchMode('live')}>
-            Live {localOrigin ? 'system' : 'locally ↗'}
-          </button>
-        </div>
+        {localLiveBackend ? (
+          <div className="mode-switch" role="group" aria-label="Laboratory mode">
+            <button aria-pressed={mode === 'replay'} onClick={() => switchMode('replay')}>
+              Replay recordings
+            </button>
+            <button aria-pressed={mode === 'live'} onClick={() => switchMode('live')}>
+              Live {localOrigin ? 'system' : 'locally ↗'}
+            </button>
+          </div>
+        ) : (
+          <span>Recorded experiments · automatic playback</span>
+        )}
         <span>
           {mode === 'replay'
             ? `${replay.index?.runs.length ?? 0} / ${replay.index?.expectedRuns ?? 40} real runs published`
@@ -531,6 +536,10 @@ function App() {
               {replay.recording
                 ? `${replay.recording.type.replaceAll('_', ' ')} · Kubernetes · ${replay.recording.id} · observed recovery ${replay.recording.recoverySeconds.toFixed(1)} s`
                 : 'Only completed real recordings are published. No synthetic telemetry is generated.'}
+            </p>
+            <p>
+              Plays automatically and loops. These are captured test-system measurements, not your
+              device or internet latency.
             </p>
           </div>
           <div className="player-controls">
@@ -664,6 +673,13 @@ function App() {
                     </div>
                   ))}
                 </div>
+                {mode === 'replay' && (
+                  <p className="micro">
+                    Real measurements from the recorded local test system, not random numbers. p95
+                    estimates the time within which 95% of its gateway requests completed. It does
+                    not measure your internet connection.
+                  </p>
+                )}
                 <div className="service-map">
                   {(
                     snapshot?.services.filter((s) =>
@@ -748,7 +764,10 @@ function App() {
                 <p className="card-description">Where one request spends its time.</p>
                 {!snapshot?.trace.length ? (
                   <div className="empty-state">
-                    <span>↳</span> Make a checkout to reveal its request waterfall.
+                    <span>↳</span>{' '}
+                    {mode === 'replay'
+                      ? 'The recorded checkout waterfall appears as this experiment plays.'
+                      : 'Make a checkout to reveal its request waterfall.'}
                   </div>
                 ) : (
                   <div className="waterfall">
@@ -842,56 +861,51 @@ function App() {
                 </p>
                 <button
                   className="secondary full"
-                  disabled={!connected}
-                  onClick={() => {
-                    setMessage(
-                      'Faults expire automatically. Manual clear is restricted to the operator.',
-                    );
-                  }}
+                  aria-expanded={recoveryHelp}
+                  aria-controls="recovery-explanation"
+                  onClick={() => setRecoveryHelp((open) => !open)}
                 >
-                  How does recovery work? <span>↗</span>
+                  How does recovery work? <span aria-hidden="true">{recoveryHelp ? '−' : '+'}</span>
                 </button>
-              </section>
-              <section className="card shop">
-                <div className="section-heading">
-                  <h2>Try the shop</h2>
-                  <span className="bag">{count} ITEMS</span>
-                </div>
-                <p className="card-description">
-                  {mode === 'replay'
-                    ? 'Recorded products and checkout results. Shopping is available in live mode.'
-                    : 'A real cart. A simulated payment processor.'}
-                </p>
-                <div className="products">
-                  {products.length ? (
-                    products.slice(0, 3).map((p) => (
-                      <button
-                        disabled={mode === 'replay' || busy || !connected}
-                        key={p.id}
-                        className="product"
-                        onClick={() => void add(p)}
-                      >
-                        <span className="product-icon">{p.icon}</span>
-                        <span>
-                          <strong>{p.name}</strong>
-                          <small>${(p.price / 100).toFixed(2)}</small>
-                        </span>
-                        <span className="add">+</span>
-                      </button>
-                    ))
-                  ) : (
-                    <div className="empty-state compact">
-                      Products load from Postgres when connected.
-                    </div>
+                <div
+                  id="recovery-explanation"
+                  hidden={!recoveryHelp}
+                  className="recovery-explanation"
+                >
+                  <h3>How the system recovers</h3>
+                  <p>
+                    Each fault is bounded: delays and traffic spikes expire automatically, and
+                    Kubernetes replaces killed payment pods.
+                  </p>
+                  <p>
+                    The circuit breaker stops repeated payment calls while the service is unhealthy.
+                    Orders wait safely in Redis Streams; a worker retries them using durable
+                    idempotency keys so the same order is not charged twice.
+                  </p>
+                  <p>
+                    Recovery is recorded after ten consecutive healthy samples: all instances ready,
+                    no active fault, gateway errors below 2%, and p95 latency below 250 ms.
+                  </p>
+                  {mode === 'replay' && (
+                    <p>
+                      You are watching that recovery as it happened in the captured experiment. The
+                      buttons select recordings; they do not inject new faults.
+                    </p>
                   )}
                 </div>
-                {products.length > 3 && (
-                  <details>
-                    <summary>Browse all {products.length} products</summary>
-                    <div className="products">
-                      {products.slice(3).map((p) => (
+              </section>
+              {mode === 'live' && (
+                <section className="card shop">
+                  <div className="section-heading">
+                    <h2>Try the shop</h2>
+                    <span className="bag">{count} ITEMS</span>
+                  </div>
+                  <p className="card-description">A real cart. A simulated payment processor.</p>
+                  <div className="products">
+                    {products.length ? (
+                      products.slice(0, 3).map((p) => (
                         <button
-                          disabled={mode === 'replay' || busy || !connected}
+                          disabled={busy || !connected}
                           key={p.id}
                           className="product"
                           onClick={() => void add(p)}
@@ -903,26 +917,48 @@ function App() {
                           </span>
                           <span className="add">+</span>
                         </button>
-                      ))}
-                    </div>
-                  </details>
-                )}
-                <button
-                  className="primary full"
-                  disabled={mode === 'replay' ? !replay.recording : busy || !count || !connected}
-                  onClick={() => void checkout()}
-                >
-                  {mode === 'replay'
-                    ? 'View a recorded checkout'
-                    : busy
-                      ? 'Working…'
-                      : `Checkout (${count})`}
-                  <span>→</span>
-                </button>
-                <p className="shop-result" role="status">
-                  {message || 'No real money. No account. Just an experiment.'}
-                </p>
-              </section>
+                      ))
+                    ) : (
+                      <div className="empty-state compact">
+                        Products load from Postgres when connected.
+                      </div>
+                    )}
+                  </div>
+                  {products.length > 3 && (
+                    <details>
+                      <summary>Browse all {products.length} products</summary>
+                      <div className="products">
+                        {products.slice(3).map((p) => (
+                          <button
+                            disabled={busy || !connected}
+                            key={p.id}
+                            className="product"
+                            onClick={() => void add(p)}
+                          >
+                            <span className="product-icon">{p.icon}</span>
+                            <span>
+                              <strong>{p.name}</strong>
+                              <small>${(p.price / 100).toFixed(2)}</small>
+                            </span>
+                            <span className="add">+</span>
+                          </button>
+                        ))}
+                      </div>
+                    </details>
+                  )}
+                  <button
+                    className="primary full"
+                    disabled={busy || !count || !connected}
+                    onClick={() => void checkout()}
+                  >
+                    {busy ? 'Working…' : `Checkout (${count})`}
+                    <span>→</span>
+                  </button>
+                  <p className="shop-result" role="status">
+                    {message || 'No real money. No account. Just an experiment.'}
+                  </p>
+                </section>
+              )}
               <section className="card events">
                 <div className="section-heading">
                   <h2>
