@@ -1,3 +1,33 @@
+header {
+  padding-top: 16px;
+}
+.brand-row {
+  padding-bottom: 12px;
+}
+.hero {
+  padding: 18px 0;
+  gap: 24px;
+}
+.hero .eyebrow {
+  margin-bottom: 6px;
+  font-size: 9px;
+}
+.hero h1 {
+  font-size: clamp(24px, 2.5vw, 32px);
+  letter-spacing: -1px;
+  line-height: 1.2;
+}
+.hero h1 br {
+  display: none;
+}
+.hero p {
+  margin-top: 7px;
+  font-size: 13px;
+}
+.hero .connection {
+  padding-top: 0;
+  flex-shrink: 0;
+}
 .mode-row {
   display: flex;
   align-items: center;

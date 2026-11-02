@@ -477,13 +477,12 @@ function App() {
             </div>
             <h1>
               Break something.
-              <br />
-              <span>Watch it recover.</span>
+              <br /> <span>Watch it recover.</span>
             </h1>
             <p>
-              A small shop running on a system you’re allowed to break.
-              <br className="desktop" /> Inject a fault, follow the request, see resilience in
-              action.
+              {mode === 'replay'
+                ? 'Play a real fault experiment and watch the system recover.'
+                : 'Inject a fault, follow the request, see resilience in action.'}
             </p>
           </div>
           <div className={'connection ' + (connected ? 'online' : '')}>
@@ -591,17 +590,13 @@ function App() {
         <Engineering snapshot={snapshot} bench={bench} mode={mode} />
       ) : (
         <>
-          {tour && (
+          {tour && mode === 'live' && (
             <aside className="tour">
               <span className="tour-number">02:00</span>
               <p>
-                <strong>
-                  {mode === 'replay' ? 'Your two-minute replay' : 'Your two-minute experiment'}
-                </strong>
+                <strong>Your two-minute experiment</strong>
                 <br />
-                {mode === 'replay'
-                  ? 'Choose a fault → watch the graph → follow the circuit breaker → see the recorded recovery.'
-                  : 'Kill payment → try Checkout → watch the circuit breaker → see the order recover.'}
+                Kill payment → try Checkout → watch the circuit breaker → see the order recover.
               </p>
               <button
                 onClick={() => {
@@ -647,10 +642,21 @@ function App() {
           )}
           <main className="dashboard">
             <div className="main-column">
+              <section className="card chart-card">
+                <div className="section-heading">
+                  <h2>
+                    <span className="section-index">01</span> The last 30 seconds
+                  </h2>
+                  <span className="label">
+                    {mode === 'replay' ? 'RECORDED WINDOW' : 'LIVE WINDOW'}
+                  </span>
+                </div>
+                <Chart samples={samples} />
+              </section>
               <section className="card system">
                 <div className="section-heading">
                   <h2>
-                    <span className="section-index">01</span> System overview
+                    <span className="section-index">02</span> System overview
                   </h2>
                   <span className="label">
                     {snapshot
@@ -763,17 +769,6 @@ function App() {
                   </span>
                   <span>Gateway → services → data</span>
                 </div>
-              </section>
-              <section className="card">
-                <div className="section-heading">
-                  <h2>
-                    <span className="section-index">02</span> The last 30 seconds
-                  </h2>
-                  <span className="label">
-                    {mode === 'replay' ? 'RECORDED WINDOW' : 'LIVE WINDOW'}
-                  </span>
-                </div>
-                <Chart samples={samples} />
               </section>
               <section className="card">
                 <div className="section-heading">

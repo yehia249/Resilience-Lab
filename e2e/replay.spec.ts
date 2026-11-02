@@ -19,6 +19,18 @@ test('public replay is labelled, uses real files, plays each fault and never con
   await expect(page.getByRole('button', { name: /Live locally|Live system/ })).toHaveCount(0);
   await expect(page.getByRole('heading', { name: 'Try the shop' })).toHaveCount(0);
   await expect(page.getByText('It does not measure your internet connection.')).toBeVisible();
+  for (const viewport of [
+    { width: 1920, height: 950 },
+    { width: 1366, height: 768 },
+    { width: 390, height: 844 },
+  ]) {
+    await page.setViewportSize(viewport);
+    const graph = await page.locator('.chart-card').boundingBox();
+    expect(graph).not.toBeNull();
+    expect(graph!.y).toBeGreaterThanOrEqual(0);
+    expect(graph!.y + graph!.height).toBeLessThanOrEqual(viewport.height);
+  }
+  await page.setViewportSize({ width: 1280, height: 800 });
   const points = await page
     .locator('.chart polyline')
     .evaluateAll((lines) => lines.map((line) => line.getAttribute('points')));
