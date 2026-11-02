@@ -46,10 +46,10 @@ test('public replay is labelled, uses real files, plays each fault and never con
     await expect(page.locator('.replay-banner')).toContainText(type);
     await expect(page.locator('.connection')).toContainText('REPLAYING A REAL CAPTURE');
   }
-  await page.getByRole('button', { name: 'Pause', exact: true }).click();
-  await expect(page.getByRole('button', { name: 'Play', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Pause replay', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Start replay', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Restart', exact: true }).click();
-  await expect(page.getByRole('button', { name: 'Pause', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Pause replay', exact: true })).toBeVisible();
   expect(backendCalls).toEqual([]);
   await page.getByRole('link', { name: 'Engineering' }).click();
   await expect(page.getByRole('heading', { name: 'Under the hood' })).toBeVisible();

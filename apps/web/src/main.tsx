@@ -542,12 +542,33 @@ function App() {
               device or internet latency.
             </p>
           </div>
-          <div className="player-controls">
-            <button disabled={!replay.recording} onClick={replay.toggle}>
-              {replay.playing ? 'Pause' : 'Play'}
+          <div className="player-controls" role="group" aria-label="Playback controls">
+            <button
+              className="playback-primary"
+              disabled={!replay.recording}
+              onClick={replay.toggle}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                width="22"
+                height="22"
+                aria-hidden="true"
+                fill="currentColor"
+              >
+                {replay.playing ? (
+                  <path d="M6 4h4v16H6zm8 0h4v16h-4z" />
+                ) : (
+                  <path d="m7 3 15 9-15 9z" />
+                )}
+              </svg>
+              {replay.playing ? 'Pause replay' : 'Start replay'}
             </button>
-            <button disabled={!replay.recording} onClick={replay.restart}>
-              Restart
+            <button
+              className="playback-restart"
+              disabled={!replay.recording}
+              onClick={replay.restart}
+            >
+              <span aria-hidden="true">↻</span> Restart
             </button>
             <label>
               Speed{' '}
@@ -578,7 +599,9 @@ function App() {
                   {mode === 'replay' ? 'Your two-minute replay' : 'Your two-minute experiment'}
                 </strong>
                 <br />
-                Kill payment → try Checkout → watch the circuit breaker → see the order recover.
+                {mode === 'replay'
+                  ? 'Choose a fault → watch the graph → follow the circuit breaker → see the recorded recovery.'
+                  : 'Kill payment → try Checkout → watch the circuit breaker → see the order recover.'}
               </p>
               <button
                 onClick={() => {
