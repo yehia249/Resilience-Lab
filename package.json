@@ -34,7 +34,7 @@
     "@opentelemetry/exporter-trace-otlp-http": "0.300.0",
     "@opentelemetry/sdk-metrics": "3.0.0",
     "@opentelemetry/sdk-node": "0.300.0",
-    "fastify": "5.12.7",
+    "fastify": "5.12.8",
     "ioredis": "5.8.2",
     "pg": "8.16.3",
     "pino": "9.14.0",
